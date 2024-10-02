@@ -1,15 +1,17 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+body, html {
   margin: 0;
   padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   background-color: #1e1e1e;
-  color: #ffffff;
+  color: #d4d4d4;
 }
 
 .app {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .chat-container {
@@ -21,69 +23,92 @@ body {
 }
 
 .message {
-  margin-bottom: 20px;
-  max-width: 80%;
+  margin-bottom: 24px;
+  display: flex;
 }
 
 .message-content {
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  padding: 10px 15px;
-  line-height: 1.4;
-}
-
-.user {
-  align-self: flex-end;
-}
-
-.assistant {
-  align-self: flex-start;
+  background-color: transparent;
+  padding: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .sender-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  margin-right: 12px;
   font-weight: bold;
-  margin-right: 10px;
-  color: #9e9e9e;
+  font-size: 12px;
+}
+
+.user .sender-icon {
+  background-color: #9333ea;
+}
+
+.assistant .sender-icon {
+  background-color: #2563eb;
+}
+
+.artifact-area {
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.artifact-area code {
+  font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.input-container {
+  border-top: 1px solid #3a3a3a;
+  padding: 24px;
 }
 
 .input-form {
   display: flex;
-  padding: 20px;
-  background-color: #2a2a2a;
+  align-items: center;
 }
 
 input {
   flex-grow: 1;
-  padding: 10px;
-  border: 1px solid #4a4a4a;
+  padding: 12px;
+  border: 1px solid #3a3a3a;
   border-radius: 4px;
-  background-color: #3a3a3a;
-  color: #ffffff;
+  background-color: #2a2a2a;
+  color: #d4d4d4;
   font-size: 16px;
 }
 
 input::placeholder {
-  color: #9e9e9e;
+  color: #6b7280;
 }
 
 button {
-  padding: 10px 20px;
-  background-color: #4a4a4a;
-  color: white;
+  background-color: transparent;
   border: none;
-  border-radius: 4px;
-  margin-left: 10px;
   cursor: pointer;
-  font-size: 16px;
+  padding: 8px;
+  margin-left: 8px;
 }
 
-button:hover {
-  background-color: #5a5a5a;
+button svg {
+  width: 24px;
+  height: 24px;
+  color: #6b7280;
 }
 
-button:disabled {
-  background-color: #3a3a3a;
-  cursor: not-allowed;
+button:hover svg {
+  color: #d4d4d4;
 }
 
 .typing-indicator {
@@ -94,28 +119,30 @@ button:disabled {
 .typing-indicator span {
   height: 8px;
   width: 8px;
-  float: left;
-  margin: 0 1px;
-  background-color: #9e9e9e;
+  margin: 0 2px;
+  background-color: #6b7280;
   display: block;
   border-radius: 50%;
   opacity: 0.4;
+  animation: blink 1.4s infinite both;
 }
 
-.typing-indicator span:nth-of-type(1) {
-  animation: 1s blink infinite 0.3333s;
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
 }
 
-.typing-indicator span:nth-of-type(2) {
-  animation: 1s blink infinite 0.6666s;
-}
-
-.typing-indicator span:nth-of-type(3) {
-  animation: 1s blink infinite 0.9999s;
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 @keyframes blink {
-  50% {
+  0% {
+    opacity: 0.2;
+  }
+  20% {
     opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
   }
 }

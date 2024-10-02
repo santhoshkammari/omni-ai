@@ -75,14 +75,19 @@ function App() {
     setIsLoading(false);
   };
 
-  // Function to render message text with proper line breaks
   const renderMessageText = (text) => {
-    return text.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        {index !== text.split('\n').length - 1 && <br />}
-      </React.Fragment>
-    ));
+    const parts = text.split(/<artifact_area>|<\/artifact_area>/);
+    return parts.map((part, index) => {
+      if (index % 2 === 0) {
+        return <span key={index}>{part}</span>;
+      } else {
+        return (
+          <pre key={index} className="artifact-area">
+            <code>{part.trim()}</code>
+          </pre>
+        );
+      }
+    });
   };
 
   return (
@@ -91,15 +96,15 @@ function App() {
         {messages.map((message, index) => (
           <div key={index} className={`message ${message.sender}`}>
             <div className="message-content">
-              <span className="sender-icon">{message.sender === 'user' ? 'You' : 'AI'}</span>
-              <p>{renderMessageText(message.text)}</p>
+              <span className="sender-icon">{message.sender === 'user' ? 'SK' : 'Claude'}</span>
+              {renderMessageText(message.text)}
             </div>
           </div>
         ))}
         {isLoading && (
           <div className="message assistant">
             <div className="message-content">
-              <span className="sender-icon">AI</span>
+              <span className="sender-icon">Claude</span>
               <div className="typing-indicator">
                 <span></span>
                 <span></span>
@@ -110,18 +115,22 @@ function App() {
         )}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={handleSubmit} className="input-form">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Message Claude..."
-          disabled={isLoading}
-        />
-        <button type="submit" disabled={isLoading}>
-          Send
-        </button>
-      </form>
+      <div className="input-container">
+        <form onSubmit={handleSubmit} className="input-form">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Reply to Claude..."
+            disabled={isLoading}
+          />
+          <button type="submit" disabled={isLoading}>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

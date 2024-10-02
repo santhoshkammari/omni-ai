@@ -33,7 +33,7 @@ function App() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
-      setMessages(prev => [...prev, { text: '', sender: 'bot' }]);
+      let assistantResponse = '';
 
       while (true) {
         const { value, done } = await reader.read();
@@ -48,16 +48,18 @@ function App() {
           try {
             const jsonResponse = JSON.parse(line);
             if (jsonResponse.content) {
+              assistantResponse += jsonResponse.content;
               setMessages(prev => {
                 const lastMessage = prev[prev.length - 1];
-                if (lastMessage.sender === 'bot') {
+                if (lastMessage && lastMessage.sender === 'assistant') {
                   const updatedLastMessage = {
                     ...lastMessage,
-                    text: lastMessage.text + jsonResponse.content
+                    text: assistantResponse
                   };
                   return [...prev.slice(0, -1), updatedLastMessage];
+                } else {
+                  return [...prev, { text: assistantResponse, sender: 'assistant' }];
                 }
-                return prev;
               });
             }
           } catch (error) {
@@ -67,7 +69,7 @@ function App() {
       }
     } catch (error) {
       console.error('Error:', error);
-      setMessages(prev => [...prev, { text: 'An error occurred.', sender: 'bot' }]);
+      setMessages(prev => [...prev, { text: 'An error occurred.', sender: 'assistant' }]);
     }
 
     setIsLoading(false);
@@ -75,18 +77,19 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>OmniAI Chat</h1>
-      </header>
       <div className="chat-container">
         {messages.map((message, index) => (
           <div key={index} className={`message ${message.sender}`}>
-            <div className="message-content">{message.text}</div>
+            <div className="message-content">
+              <span className="sender-icon">{message.sender === 'user' ? 'You' : 'AI'}</span>
+              <p>{message.text}</p>
+            </div>
           </div>
         ))}
         {isLoading && (
-          <div className="message bot">
+          <div className="message assistant">
             <div className="message-content">
+              <span className="sender-icon">AI</span>
               <div className="typing-indicator">
                 <span></span>
                 <span></span>
@@ -102,7 +105,7 @@ function App() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
+          placeholder="Message Claude..."
           disabled={isLoading}
         />
         <button type="submit" disabled={isLoading}>

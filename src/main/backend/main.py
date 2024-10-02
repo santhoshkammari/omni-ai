@@ -89,7 +89,6 @@ class OmniAIChat:
         """
         return system_prompt
 
-
 if __name__ == '__main__':
     chatbot = OmniAIChat()
     chatbot.print_stream("give me python code to add two numpy arrays sum ")

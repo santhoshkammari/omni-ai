@@ -75,6 +75,16 @@ function App() {
     setIsLoading(false);
   };
 
+  // Function to render message text with proper line breaks
+  const renderMessageText = (text) => {
+    return text.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index !== text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   return (
     <div className="app">
       <div className="chat-container">
@@ -82,7 +92,7 @@ function App() {
           <div key={index} className={`message ${message.sender}`}>
             <div className="message-content">
               <span className="sender-icon">{message.sender === 'user' ? 'You' : 'AI'}</span>
-              <p>{message.text}</p>
+              <p>{renderMessageText(message.text)}</p>
             </div>
           </div>
         ))}

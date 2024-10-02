@@ -14,7 +14,7 @@ EMAIL = os.getenv("HUGGINGFACE_EMAIL")
 PASSWD = os.getenv("HUGGINGFACE_PASSWD")
 
 class OmniAIChat:
-    def __init__(self):
+    def __init__(self,model = None):
         self.cookies = self.setup_login()
         self.DEFAULT_MODELS = ['meta-llama/Meta-Llama-3.1-70B-Instruct',
                                'CohereForAI/c4ai-command-r-plus-08-2024',
@@ -24,6 +24,7 @@ class OmniAIChat:
                                'mistralai/Mistral-Nemo-Instruct-2407',
                                'microsoft/Phi-3.5-mini-instruct'
                                ]
+        self.current_model = model
         self.chatbot  = self.setup_chatbot()
 
 
@@ -36,7 +37,7 @@ class OmniAIChat:
     def setup_chatbot(self):
         chatbot = hugchat.ChatBot(cookies=self.cookies.get_dict(),
                                   default_llm=config_parser['MODEL_CONFIG'][
-                                      'MODEL_NAME'])
+                                      'MODEL_NAME'] if self.current_model is None else self.current_model)
         return chatbot
 
 

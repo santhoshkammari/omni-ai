@@ -2,9 +2,13 @@ import streamlit as st
 from omni_ai import OmniAIChat
 from typing import List, Tuple, Generator
 from datetime import datetime
+import os
+import pytesseract
+from pdf2image import convert_from_bytes
+from PIL import Image
+import io
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
-
 
 
 class OmniAIChatApp:
@@ -34,6 +38,8 @@ class OmniAIChatApp:
             st.session_state.selected_model = None
         if "sidebar_state" not in st.session_state:
             st.session_state.sidebar_state = "expanded"
+        if "uploaded_file" not in st.session_state:
+            st.session_state.uploaded_file = None
 
     @staticmethod
     def create_chat_instance(model: str) -> OmniAIChat:
@@ -59,13 +65,25 @@ class OmniAIChatApp:
             if flag:
                 chat_content += item
                 chat_content = chat_content.replace("<artifact_area>", "")
-                chat_placeholder.write(chat_content)
+                chat_placeholder.markdown(chat_content)
             else:
                 artifact_content += item
                 if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
                 artifact_content = artifact_content.replace("artifact_area>", "")
                 artifact_placeholder.code(artifact_content)
         return chat_content, artifact_content
+
+    @staticmethod
+    def perform_ocr(file_content: bytes, file_type: str) -> str:
+        if file_type == 'pdf':
+            images = convert_from_bytes(file_content)
+        else:  # For image files
+            images = [Image.open(io.BytesIO(file_content))]
+
+        text = ""
+        for image in images:
+            text += pytesseract.image_to_string(image)
+        return text
 
     def render_sidebar(self):
         st.sidebar.title("Chat History")
@@ -89,7 +107,7 @@ class OmniAIChatApp:
         with self.main_area:
             st.title("OmniAI Chat Interface")
 
-            col1, col2 = st.columns([4,3])
+            col1, col2 = st.columns([4, 3])
             with col1:
                 selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS)
             if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
@@ -100,25 +118,64 @@ class OmniAIChatApp:
             self.artifact_col = col2
 
             with self.chat_col:
-                self.display_chat_messages()
                 self.handle_user_input()
+                self.display_chat_messages()
 
     def display_chat_messages(self):
         if st.session_state.current_chat_id:
-            for message in st.session_state.chats[st.session_state.current_chat_id]["messages"]:
+            for message in reversed(st.session_state.chats[st.session_state.current_chat_id]["messages"]):
                 with st.chat_message(message["role"]):
+                    if message["role"] == "user" and "file" in message:
+                        st.markdown(f"Attached file: {message['file']}")
                     st.markdown(message["content"])
 
     def handle_user_input(self):
-        query = st.chat_input("Ask your question here:")
-        if query:
+        col1, col2 = st.columns([6, 1])
+
+        with col1:
+            query = st.text_area("Ask your question here:", key="user_input", height=100)
+
+        with col2:
+            st.write("")  # Add some vertical space
+            st.write("")
+            send_button = st.button("Send")
+            st.write("")
+
+        # Move file uploader outside of the button click event
+        uploaded_file = st.file_uploader("Choose a file", type=["txt", "pdf", "doc", "docx"], key="file_uploader")
+
+        if uploaded_file is not None:
+            st.session_state.uploaded_file = uploaded_file
+            st.success(f"File {uploaded_file.name} uploaded successfully!")
+
+            print(f"Uploaded file type: {type(uploaded_file)}")
+
+        if send_button and (query or st.session_state.uploaded_file):
             if not st.session_state.current_chat_id:
                 self.create_new_chat()
 
             current_chat = st.session_state.chats[st.session_state.current_chat_id]
-            current_chat["messages"].append({"role": "user", "content": query})
-            with st.chat_message("user"):
-                st.markdown(query)
+
+            if st.session_state.uploaded_file:
+                file_content = st.session_state.uploaded_file.read()
+                file_name = st.session_state.uploaded_file.name
+                file_extension = file_name.lower().split('.')[-1]
+
+                if file_extension in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']:
+                    ocr_text = self.perform_ocr(file_content, file_extension)
+                    query += f"\n\nAttached PDF content (OCR):\n{ocr_text}"
+                else:
+                    query += f"\n\nAttached file content:\n{file_content.decode('utf-8')}"
+
+                current_chat["messages"].append({
+                    "role": "user",
+                    "content": f"Uploaded file: {file_name}",
+                    "file": file_name
+                })
+                st.session_state.uploaded_file = None
+
+            if query:
+                current_chat["messages"].append({"role": "user", "content": query})
 
             with st.chat_message("assistant"):
                 self.process_ai_response(query)

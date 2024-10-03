@@ -100,15 +100,8 @@ class OmniAIChatApp:
         if artifact_content:
             st.session_state.artifacts.append(artifact_content)
 
-    def render_artifacts(self):
-        with self.artifact_col:
-            st.title("Artifacts")
-            for artifact in st.session_state.artifacts:
-                st.markdown(artifact)
-
     def run(self):
         self.render_chat_interface()
-        self.render_artifacts()
 
 def main():
     app = OmniAIChatApp()

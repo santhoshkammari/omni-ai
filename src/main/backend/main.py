@@ -26,7 +26,7 @@ AVAILABLE_MODELS = ['meta-llama/Meta-Llama-3.1-70B-Instruct',
                                'mistralai/Mistral-Nemo-Instruct-2407',
                                'microsoft/Phi-3.5-mini-instruct'
                                ]
-chatbot = OmniAIChat(model=AVAILABLE_MODELS[-1])
+chatbot = OmniAIChat(model=AVAILABLE_MODELS[2])
 
 class ChatRequest(BaseModel):
     query: str

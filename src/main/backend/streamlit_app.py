@@ -1,94 +1,118 @@
 import streamlit as st
-import requests
-import json
+from omni_ai import OmniAIChat
+from typing import List, Tuple, Generator
 
-# FastAPI endpoint
-API_URL = "http://localhost:8888/api/chat"
+st.set_page_config(layout="wide")
 
-def get_chat_response(query: str, web_search: bool = False):
-    response = requests.post(API_URL, json={"query": query, "web_search": web_search}, stream=True)
-    return response.iter_lines()
 
-def main():
-    st.set_page_config(layout="wide")
+class OmniAIChatApp:
+    AVAILABLE_MODELS: List[str] = [
+        'meta-llama/Meta-Llama-3.1-70B-Instruct',
+        'CohereForAI/c4ai-command-r-plus-08-2024',
+        'Qwen/Qwen2.5-72B-Instruct',
+        'meta-llama/Llama-3.2-11B-Vision-Instruct',
+        'NousResearch/Hermes-3-Llama-3.1-8B',
+        'mistralai/Mistral-Nemo-Instruct-2407',
+        'microsoft/Phi-3.5-mini-instruct'
+    ]
 
-    # Create two columns for chat and artifacts with a 50/50 width split
-    chat_col, artifact_col = st.columns([1, 1])
+    def __init__(self):
+        self.chat_col, self.artifact_col = st.columns([1, 1])
+        self.initialize_session_state()
 
-    with chat_col:
-        st.title("AI Chat Interface")
-
-        # Initialize chat history
+    def initialize_session_state(self):
         if "messages" not in st.session_state:
             st.session_state.messages = []
         if "artifacts" not in st.session_state:
             st.session_state.artifacts = []
+        if "chatbot" not in st.session_state:
+            st.session_state.chatbot = None
+        if "selected_model" not in st.session_state:
+            st.session_state.selected_model = None
 
-        # Display chat messages
-        for message in st.session_state.messages:
-            if message["role"] == "user":
-                st.write(f"**You:** {message['content']}")
+    @staticmethod
+    def create_chat_instance(model: str) -> OmniAIChat:
+        return OmniAIChat(model=model)
+
+    @staticmethod
+    def get_chat_response(chatbot: OmniAIChat, query: str, web_search: bool = False) -> Generator:
+        return chatbot.generator(query, web_search=web_search)
+
+    @staticmethod
+    def data_stream(generator: Generator) -> Generator[Tuple[str, bool], None, None]:
+        flag = True
+        for chunk in generator:
+            if chunk == 'artifact':
+                flag = not flag
+            yield chunk, flag
+
+    @staticmethod
+    def update_chat_col(generator: Generator, chat_placeholder: st.empty, artifact_placeholder: st.empty) -> Tuple[str, str]:
+        chat_content, artifact_content = "", ""
+        for item, flag in generator:
+            if flag:
+                chat_content += item
+                chat_placeholder.markdown(chat_content)
             else:
-                st.write(f"**AI:** {message['content']}")
+                artifact_content += item
+                artifact_placeholder.markdown(artifact_content)
+        return chat_content, artifact_content
 
-        # Input text box for user query
-        query = st.text_input("Ask your question here:")
+    def render_chat_interface(self):
+        with self.chat_col:
+            st.title("OmniAI Chat Interface")
+            selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS)
 
+            if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
+                st.session_state.chatbot = self.create_chat_instance(selected_model)
+                st.session_state.selected_model = selected_model
+
+            self.display_chat_messages()
+            self.handle_user_input()
+
+    def display_chat_messages(self):
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+    def handle_user_input(self):
+        query = st.chat_input("Ask your question here:")
         if query:
-            # Display user message
-            st.write(f"**You:** {query}")
             st.session_state.messages.append({"role": "user", "content": query})
+            with st.chat_message("user"):
+                st.markdown(query)
 
-            # Initialize artifact and token buffer
-            artifact_count = len(st.session_state.artifacts)
-            current_artifact = ""
-            in_artifact = False
-            artifact_tokens = []
+            with st.chat_message("assistant"):
+                self.process_ai_response(query)
 
-            # Stream AI response and handle artifacts
-            for chunk in get_chat_response(query):
-                if chunk:
-                    data = json.loads(chunk.decode())
-                    if "content" in data:
-                        content = data["content"]
+    def process_ai_response(self, query: str):
+        chat_placeholder = st.empty()
+        artifact_placeholder = self.artifact_col.empty()
 
-                        # Buffering tokens to identify artifacts
-                        if len(artifact_tokens) > 4:
-                            artifact_tokens = artifact_tokens[1:] + [content]
-                        else:
-                            artifact_tokens.append(content)
+        response_generator = self.get_chat_response(st.session_state.chatbot, query)
+        chat_content, artifact_content = self.update_chat_col(
+            self.data_stream(response_generator),
+            chat_placeholder,
+            artifact_placeholder
+        )
 
-                        artifact_area = "".join(artifact_tokens)
+        st.session_state.messages.append({"role": "assistant", "content": chat_content})
+        if artifact_content:
+            st.session_state.artifacts.append(artifact_content)
 
-                        # Check for artifact start/end
-                        if "<artifact_area>" in artifact_area:
-                            in_artifact = True
-                            content = content.replace("<artifact_area>", "")
-                            artifact_count += 1
-                            st.write(f"\n[Artifact {artifact_count}]")
-                        elif "</artifact_area>" in artifact_area:
-                            in_artifact = False
-                            content = content.replace("</artifact_area>", "")
-                            if current_artifact:
-                                st.session_state.artifacts.append(current_artifact.strip())
-                                current_artifact = ""
+    def render_artifacts(self):
+        with self.artifact_col:
+            st.title("Artifacts")
+            for artifact in st.session_state.artifacts:
+                st.markdown(artifact)
 
-                        # Handle content display
-                        if in_artifact:
-                            current_artifact += content
-                        else:
-                            st.write(content)
+    def run(self):
+        self.render_chat_interface()
+        self.render_artifacts()
 
-            # Append response to chat history
-            st.session_state.messages.append({"role": "assistant", "content": 'Response streamed above'})
-
-    # Artifacts section on the right
-    with artifact_col:
-        st.title("Artifacts")
-        if st.session_state.artifacts:
-            for i, artifact in enumerate(st.session_state.artifacts, 1):
-                st.write(f"**Artifact {i}:**")
-                st.code(artifact)
+def main():
+    app = OmniAIChatApp()
+    app.run()
 
 if __name__ == "__main__":
     main()

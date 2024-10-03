@@ -23,7 +23,7 @@ function App() {
       const response = await fetch('http://localhost:8888/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: input }),
+        body: JSON.stringify({ query: input}),
       });
 
       if (!response.ok) {

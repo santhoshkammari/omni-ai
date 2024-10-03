@@ -49,7 +49,7 @@ def main():
                         if "content" in data:
                             content = data["content"]
 
-                            # Check for artifact area start/end
+
                             if "artifact" in content:
                                 in_artifact = True
                                 content = content.replace("<artifact_area>", "")

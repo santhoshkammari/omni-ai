@@ -82,6 +82,15 @@ class OmniAIChat:
 
         Respond to this query following the guidelines above, ensuring only actual code is wrapped in <artifact_area> tags.
         """
+        system_prompt = f"""
+                You are an AI assistant created by OmniAI
+
+                Wrap only the code or scripts in <artifact_area>...</artifact_area> tags. This includes:
+                   - Python code snippets
+
+                Original query: {query}
+                Respond to query.
+                """
         return system_prompt
 
 if __name__ == '__main__':

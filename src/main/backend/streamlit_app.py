@@ -166,7 +166,6 @@ class OmniAIChatApp:
 
                 if file_extension in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']:
                     ocr_text = self.perform_ocr(file_content, file_extension)
-                    Path("ocr.txt").write_text(ocr_text)
                     query += f"\n\nAttached PDF content (OCR):\n{ocr_text}"
                 else:
                     query += f"\n\nAttached file content:\n{file_content.decode('utf-8')}"

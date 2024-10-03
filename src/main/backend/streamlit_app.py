@@ -4,6 +4,7 @@ from typing import List, Tuple, Generator
 
 st.set_page_config(layout="wide")
 
+
 class OmniAIChatApp:
     AVAILABLE_MODELS: List[str] = [
         'microsoft/Phi-3.5-mini-instruct',
@@ -13,12 +14,11 @@ class OmniAIChatApp:
         'mistralai/Mistral-Nemo-Instruct-2407',
         'meta-llama/Llama-3.2-11B-Vision-Instruct',
         'CohereForAI/c4ai-command-r-plus-08-2024',
+
     ]
 
     def __init__(self):
-        self.main_container = st.container()
-        self.chat_col, self.artifact_col = self.main_container.columns([1, 1])
-        self.input_container = st.container()
+        self.chat_col, self.artifact_col = st.columns([1, 1])
         self.initialize_session_state()
 
     def initialize_session_state(self):
@@ -53,23 +53,26 @@ class OmniAIChatApp:
         for item, flag in generator:
             if flag:
                 chat_content += item
+                chat_content = chat_content.replace("<artifact_area>","")
                 chat_placeholder.markdown(chat_content)
             else:
                 artifact_content += item
-                artifact_placeholder.markdown(artifact_content)
+                if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
+                artifact_content = artifact_content.replace("artifact_area>", "")
+                artifact_placeholder.code(artifact_content)
         return chat_content, artifact_content
 
     def render_chat_interface(self):
-        with self.main_container:
-            with self.chat_col:
-                st.title("OmniAI Chat Interface")
-                selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS)
+        with self.chat_col:
+            st.title("OmniAI Chat Interface")
+            selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS)
 
-                if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
-                    st.session_state.chatbot = self.create_chat_instance(selected_model)
-                    st.session_state.selected_model = selected_model
+            if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
+                st.session_state.chatbot = self.create_chat_instance(selected_model)
+                st.session_state.selected_model = selected_model
 
-                self.display_chat_messages()
+            self.display_chat_messages()
+            self.handle_user_input()
 
     def display_chat_messages(self):
         for message in st.session_state.messages:
@@ -80,14 +83,14 @@ class OmniAIChatApp:
         query = st.chat_input("Ask your question here:")
         if query:
             st.session_state.messages.append({"role": "user", "content": query})
-            with self.chat_col.chat_message("user"):
+            with st.chat_message("user"):
                 st.markdown(query)
 
-            with self.chat_col.chat_message("assistant"):
+            with st.chat_message("assistant"):
                 self.process_ai_response(query)
 
     def process_ai_response(self, query: str):
-        chat_placeholder = self.chat_col.empty()
+        chat_placeholder = st.empty()
         artifact_placeholder = self.artifact_col.empty()
 
         response_generator = self.get_chat_response(st.session_state.chatbot, query)
@@ -103,8 +106,6 @@ class OmniAIChatApp:
 
     def run(self):
         self.render_chat_interface()
-        with self.input_container:
-            self.handle_user_input()
 
 def main():
     app = OmniAIChatApp()

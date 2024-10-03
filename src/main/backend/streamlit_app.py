@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import PyPDF2
 import streamlit as st
 from omni_ai import OmniAIChat
 from typing import List, Tuple, Generator
@@ -73,17 +76,17 @@ class OmniAIChatApp:
                 artifact_placeholder.code(artifact_content)
         return chat_content, artifact_content
 
+
     @staticmethod
     def perform_ocr(file_content: bytes, file_type: str) -> str:
-        if file_type == 'pdf':
-            images = convert_from_bytes(file_content)
-        else:  # For image files
-            images = [Image.open(io.BytesIO(file_content))]
+        reader = PyPDF2.PdfReader(io.BytesIO(file_content))
+        num_pages = len(reader.pages)
 
-        text = ""
-        for image in images:
-            text += pytesseract.image_to_string(image)
-        return text
+        content = ""
+        for page in range(num_pages):
+            content += reader.pages[page].extract_text()
+
+        return content
 
     def render_sidebar(self):
         st.sidebar.title("Chat History")
@@ -142,7 +145,7 @@ class OmniAIChatApp:
             st.write("")
 
         # Move file uploader outside of the button click event
-        uploaded_file = st.file_uploader("Choose a file", type=["txt", "pdf", "doc", "docx"], key="file_uploader")
+        uploaded_file = st.file_uploader("Choose a file", type=["pdf"], key="file_uploader")
 
         if uploaded_file is not None:
             st.session_state.uploaded_file = uploaded_file
@@ -163,6 +166,7 @@ class OmniAIChatApp:
 
                 if file_extension in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']:
                     ocr_text = self.perform_ocr(file_content, file_extension)
+                    Path("ocr.txt").write_text(ocr_text)
                     query += f"\n\nAttached PDF content (OCR):\n{ocr_text}"
                 else:
                     query += f"\n\nAttached file content:\n{file_content.decode('utf-8')}"

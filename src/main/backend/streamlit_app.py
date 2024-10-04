@@ -133,27 +133,36 @@ class OmniAIChatApp:
                     st.markdown(message["content"])
 
     def handle_user_input(self):
-        col1, col2 = st.columns([6, 1])
+        # Create a container for the input area
+        input_container = st.container()
 
-        with col1:
-            query = st.text_area("Ask your question here:", key="user_input", height=100)
+        with input_container:
+            # Use columns to create a layout similar to Claude's interface
+            col1, col2 = st.columns([6, 1],gap='small')
 
-        with col2:
-            st.write("")  # Add some vertical space
-            st.write("")
-            send_button = st.button("Send")
-            st.write("")
+            with col1:
+                query = st.text_area("Ask your question here:", key="user_input", height=100)
 
-        # Move file uploader outside of the button click event
-        uploaded_file = st.file_uploader("Choose a file", type=["pdf"], key="file_uploader")
+            with col2:
+                st.write("")  # Add some vertical space
+                st.write("")
+                send_button = st.button(label = "", key="send_button", icon=":material/arrow_upward:",
+                                        type = "primary")
+                upload_button = st.button(label = "",on_click="",icon=":material/attach_file:",type = "primary")
 
-        if uploaded_file is not None:
-            st.session_state.uploaded_file = uploaded_file
-            st.success(f"File {uploaded_file.name} uploaded successfully!")
+        # Toggle for file uploader
+        show_file_uploader = st.checkbox("Show file uploader", value=False, key="show_uploader")
 
-            print(f"Uploaded file type: {type(uploaded_file)}")
+        # File uploader (conditionally rendered)
+        if show_file_uploader:
+            uploaded_file = st.file_uploader("Choose a file", type=["pdf"], key="file_uploader")
 
-        if send_button and (query or st.session_state.uploaded_file):
+            if uploaded_file is not None:
+                st.session_state.uploaded_file = uploaded_file
+                st.success(f"File {uploaded_file.name} uploaded successfully!")
+                print(f"Uploaded file type: {type(uploaded_file)}")
+
+        if send_button and (query or getattr(st.session_state, 'uploaded_file', None)):
             if not st.session_state.current_chat_id:
                 self.create_new_chat()
 

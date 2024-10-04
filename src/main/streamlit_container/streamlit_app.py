@@ -68,6 +68,17 @@ class OmniAIChatApp:
             yield chunk, flag
 
     @staticmethod
+    def perform_ocr(file_content: bytes, file_type: str) -> str:
+        reader = PyPDF2.PdfReader(io.BytesIO(file_content))
+        num_pages = len(reader.pages)
+
+        content = ""
+        for page in range(num_pages):
+            content += reader.pages[page].extract_text()
+
+        return content
+
+    @staticmethod
     def update_chat_col(generator: Generator, chat_placeholder: st.empty, artifact_placeholder: st.empty,
                         chat_holder: st.empty) -> Tuple[
         str, str]:
@@ -86,21 +97,12 @@ class OmniAIChatApp:
                 artifact_content += item
                 if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
                 artifact_content = artifact_content.replace("artifact_area>", "")
-                artifact_placeholder.code('<div class="artifact-area">' + artifact_content + '</div>')
+                artifact_placeholder.code(artifact_content)
                 # artifact_placeholder.code(artifact_content)
         return chat_content, artifact_content
 
 
-    @staticmethod
-    def perform_ocr(file_content: bytes, file_type: str) -> str:
-        reader = PyPDF2.PdfReader(io.BytesIO(file_content))
-        num_pages = len(reader.pages)
 
-        content = ""
-        for page in range(num_pages):
-            content += reader.pages[page].extract_text()
-
-        return content
 
     def render_sidebar(self):
         st.sidebar.title("Chat History")
@@ -177,19 +179,6 @@ class OmniAIChatApp:
                 }
                 </style>
             """, unsafe_allow_html=True)
-            st.markdown("""
-                            <style>
-                            .artifact-area {
-                                 height: 80vh;
-                                 width: 100vh;
-                        overflow-y: auto;
-                        overflow-x: hidden;
-                        white-space: normal;
-                        word-wrap: break-word;
-                            }
-                            </style>
-                        """, unsafe_allow_html=True)
-
 
             # Use columns to create a layout similar to Claude's interface
             self.chat_history_area = st.container()
@@ -199,7 +188,9 @@ class OmniAIChatApp:
 
             with col1:
                 query = st.text_area(label="user_input",placeholder = "Ask your question here:", key="user_input", height=100,
-                                     label_visibility="collapsed",value="explain python code with example with 10 code examples")
+                                     label_visibility="collapsed",
+                                     value="explain python code with example with 2 code examples with explanation"
+                                     )
 
 
             with col2:

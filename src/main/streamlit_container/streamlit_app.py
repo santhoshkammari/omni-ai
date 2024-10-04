@@ -199,7 +199,7 @@ class OmniAIChatApp:
 
             with col1:
                 query = st.text_area(label="user_input",placeholder = "Ask your question here:", key="user_input", height=100,
-                                     label_visibility="collapsed",value="explain python code with example with 10 code examples")
+                                     label_visibility="collapsed",value="explain python code with 2 examples and explanation")
 
 
             with col2:

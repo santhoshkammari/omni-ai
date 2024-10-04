@@ -29,7 +29,7 @@ class OmniAIChat:
 
 
     def setup_login(self):
-        cookie_path_dir = "./cookies/" # NOTE: trailing slash (/) is required to avoid errors
+        cookie_path_dir = "cookies/"  # NOTE: trailing slash (/) is required to avoid errors
         sign = Login(EMAIL, PASSWD)
         cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
         return cookies

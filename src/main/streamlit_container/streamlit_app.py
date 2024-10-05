@@ -14,13 +14,13 @@ st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
 class OmniAIChatApp:
     AVAILABLE_MODELS: List[str] = [
-        'microsoft/Phi-3.5-mini-instruct',
-        'Qwen/Qwen2.5-72B-Instruct',
         'CohereForAI/c4ai-command-r-plus-08-2024',
+        'Qwen/Qwen2.5-72B-Instruct',
         'NousResearch/Hermes-3-Llama-3.1-8B',
         'mistralai/Mistral-Nemo-Instruct-2407',
         'meta-llama/Meta-Llama-3.1-70B-Instruct',
         'meta-llama/Llama-3.2-11B-Vision-Instruct',
+        'microsoft/Phi-3.5-mini-instruct',
 
     ]
     AGENT_TYPES: List[str] = [
@@ -102,12 +102,15 @@ class OmniAIChatApp:
                 # chat_placeholder.write(chat_content)
                 chat_content = chat_content.replace("<","##")
                 # chat_placeholder.write('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
-                chat_holder.write('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
+                chat_holder.markdown('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
 
             else:
                 artifact_content += item
                 if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
                 artifact_content = artifact_content.replace("artifact_area>", "")
+                artifact_content = artifact_content.replace("```python", "")
+                artifact_content = artifact_content.replace("python", "")
+                artifact_content = artifact_content.replace("```", "")
                 artifact_placeholder.code(artifact_content)
                 # artifact_placeholder.code(artifact_content)
         return chat_content, artifact_content
@@ -189,7 +192,7 @@ class OmniAIChatApp:
 
     def update_metrics(self):
         self.metrics_container.button(
-            label=f"{self.chunks_per_second}/s in {self.elapsed_time}s",
+            label=f"{self.chunks_per_second}/s, {self.elapsed_time}s",
             key="metrics_button_{}".format(self.chunks_per_second),
             disabled=True
         )
@@ -203,8 +206,6 @@ class OmniAIChatApp:
             uploaded_file = st.file_uploader("Choose a file", type=["pdf"], key="dfd",
                                              label_visibility="collapsed")
 
-            print(type(uploaded_file))
-            print('@@@@@@@@@@@@@@@@@@@@@@@2')
             if uploaded_file is not None:
                 st.session_state.uploaded_file = uploaded_file
                 st.success(f"File {uploaded_file.name} uploaded successfully!")

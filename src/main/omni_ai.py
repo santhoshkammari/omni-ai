@@ -7,7 +7,7 @@ from configparser import ConfigParser
 # Log in to huggingface and grant authorization to huggingchat
 from dotenv import load_dotenv
 load_dotenv()
-
+from.prompts import Prompts
 config_parser = ConfigParser()
 config_parser.read("/home/ntlpt59/MAIN/omni-ai/src/main/backend/config.ini")
 EMAIL = os.getenv("HUGGINGFACE_EMAIL")
@@ -63,32 +63,8 @@ class OmniAIChat:
         Enhances the user query with a system prompt that encourages structured thinking,
         comprehensive analysis, and formatted output with specific artifact areas for code.
         """
-        system_prompt = f"""
-        You are an AI assistant created by OmniAI. Approach each query with careful consideration and analytical thinking. When responding:
-
-        1. Thoroughly analyze complex and open-ended questions, but be concise for simpler tasks.
-        2. Break down problems systematically before providing final answers.
-        3. Engage in discussions on a wide variety of topics with intellectual curiosity.
-        6. Wrap only the code or scripts in <artifact_area> tags. This includes:
-           - Python code snippets
-           - Complete scripts or functions
-           - Any other executable code
-           - Thought/ thinking pad or area
-        7. Keep explanations, analyses, and non-code content outside of the <artifact_area> tags.
-        8. Avoid unnecessary affirmations or filler phrases at the start of responses.
-        11. If asked about very obscure topics, remind the user at the end that you may hallucinate in such cases.
-
-        Original query: {query}
-
-        Respond to this query following the guidelines above, ensuring only actual code is wrapped in <artifact_area> tags.
-        """
-        system_prompt = f"""
-                if you generate any code then Wrap the code or scripts part in <artifact_area>...</artifact_area> tags.
-                If you generate any non-code related content then DO NOT user artifact area
-                
-                {query}
-                """
-        return system_prompt
+        # return Prompts.PROD_PROMPT.format(query=query)
+        return Prompts.DEV_V2.format(query=query) #TODO
 
 if __name__ == '__main__':
     chatbot = OmniAIChat()

@@ -63,8 +63,7 @@ class OmniAIChat:
         Enhances the user query with a system prompt that encourages structured thinking,
         comprehensive analysis, and formatted output with specific artifact areas for code.
         """
-        # return Prompts.PROD_PROMPT.format(query=query)
-        return Prompts.DEV_V2.format(query=query) #TODO
+        return Prompts.DEV_V2.format(query=query)
 
 if __name__ == '__main__':
     chatbot = OmniAIChat()

@@ -6,9 +6,9 @@ class OmniAiChatCSS:
     def render_main():
         st.markdown("""
             <style>
-                # #root > div:nth-child(1) > div > div > div > div > section > div {
-                #     padding-top: 0rem;
-                # }
+                #root > div:nth-child(1) > div > div > div > div > section > div {
+                    padding-top: 1;
+                }
                 .main {
                     overflow: hidden;
                 }

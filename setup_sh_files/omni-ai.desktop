@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Omni AI
+Comment=Start Omni AI application
+Exec=bash -c 'cd ~/omni-ai && if [ ! -d "omni-ai" ]; then git clone https://github.com/santhoshkammari/omni-ai.git; fi && cd omni-ai && docker-compose up -d && xdg-open http://localhost:8501'
+Terminal=true
+Categories=Development;

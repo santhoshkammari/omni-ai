@@ -24,6 +24,10 @@ echo "HUGGINGFACE_EMAIL=$hf_email" > .env
 echo "HUGGINGFACE_PASSWD=$hf_password" >> .env
 
 # Build and start the Docker container
-docker-compose up --build -d
+if ! docker-compose up --build -d; then
+  echo "Docker build failed. Exiting."
+  exit 1
+fi
+
 
 echo "Omni AI is now running. You can access it at http://localhost:8501"

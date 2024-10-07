@@ -1,7 +1,7 @@
 import time
 
 import PyPDF2
-from .stream_base import st
+from .base import st
 from src.main.omni_ai import OmniAIChat
 from typing import List, Tuple, Generator
 from datetime import datetime
@@ -64,10 +64,6 @@ class OmniAIChatApp:
     @staticmethod
     def get_chat_response(chatbot: OmniAIChat, query: str, web_search: bool = False) -> Generator:
         return chatbot.generator(query, web_search=web_search)
-        # from src.main.ollama_api import CustomChatOllama
-        # llm = CustomChatOllama()
-        # for x in llm.stream(query):
-        #     yield x.content
 
 
     @staticmethod
@@ -139,39 +135,7 @@ class OmniAIChatApp:
     def render_chat_interface(self):
         with self.main_area:
             OmniAiChatCSS.render_main()
-            st.markdown("""
-                <style>
-                .stApp > header {
-                    background-color: transparent;
-                    height: auto !important;
-                    padding-top: 0 !important;
-                    padding-bottom: 0 !important;
-                }
-                .small-title {
-                    font-size: 24px;
-                    # color: #4a4a4a;
-                    font-weight: 600;
-                    text-align: center;
-                    padding: 5px 0;
-                    margin: 0;
-                    # background-color: #f0f0f0;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-
-            st.markdown("<h1 class='small-title'>OmniAI Chat Interface</h1>", unsafe_allow_html=True)
-
-
-            # Custom CSS
-
-            st.write("""
-                    <style>
-                    div[data-baseweb="select"] > div {
-                        width: 300px !important;
-                    }
-                    
-                    </style>
-                    """, unsafe_allow_html=True)
+            OmniAiChatCSS.render_title()
 
             col1, col2 = st.columns([1,1],gap='small')
 
@@ -212,20 +176,7 @@ class OmniAIChatApp:
                 print(f"Uploaded file type: {type(uploaded_file)}")
 
         with input_container:
-            st.markdown("""
-                <style>
-                .chat-history {
-                     height: 50vh;
-                     width: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            white-space: normal;
-            word-wrap: break-word;
-                }
-                </style>
-            """, unsafe_allow_html=True)
-
-            # Use columns to create a layout similar to Claude's interface
+            OmniAiChatCSS.render_chat_history_area()
             self.chat_history_area = st.container()
             self.chat_holder = self.chat_history_area.empty()
 

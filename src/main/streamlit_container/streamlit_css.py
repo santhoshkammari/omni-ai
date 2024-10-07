@@ -1,4 +1,4 @@
-from .stream_base import st
+from .base import st
 
 
 class OmniAiChatCSS:
@@ -43,5 +43,56 @@ class OmniAiChatCSS:
                 }
             </style>
         """, unsafe_allow_html=True)
+
+    @staticmethod
+    def render_title():
+        st.markdown("""
+                        <style>
+                        .stApp > header {
+                            background-color: transparent;
+                            height: auto !important;
+                            padding-top: 0 !important;
+                            padding-bottom: 0 !important;
+                        }
+                        .small-title {
+                            font-size: 24px;
+                            # color: #4a4a4a;
+                            font-weight: 600;
+                            text-align: center;
+                            padding: 5px 0;
+                            margin: 0;
+                            # background-color: #f0f0f0;
+                        }
+                        </style>
+                        """, unsafe_allow_html=True)
+
+        st.markdown("<h1 class='small-title'>OmniAI Chat Interface</h1>", unsafe_allow_html=True)
+
+        # Custom CSS
+
+        st.write("""
+                            <style>
+                            div[data-baseweb="select"] > div {
+                                width: 300px !important;
+                            }
+
+                            </style>
+                            """, unsafe_allow_html=True)
+
+    @staticmethod
+    def render_chat_history_area():
+        st.markdown("""
+                        <style>
+                        .chat-history {
+                             height: 50vh;
+                             width: 100vh;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    white-space: normal;
+                    word-wrap: break-word;
+                        }
+                        </style>
+                    """, unsafe_allow_html=True)
+
 
 

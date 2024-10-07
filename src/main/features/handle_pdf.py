@@ -8,11 +8,12 @@ from wordllama import WordLlama
 
 
 class PdfHandler:
-    def __init__(self, file_path: str = None, file_content = None):
+    def __init__(self, file_path: str = None, file_content = None,
+                 word_llama_dim:int = 256):
         self.file_path = file_path
         self.file_content = file_content
         self._validate()
-        self.word_llama = WordLlama.load(dim=1024)
+        self.word_llama = WordLlama.load(dim=word_llama_dim)
 
     def get_pdf_content(self):
         reader = PyPDF2.PdfReader(io.BytesIO(self.file_content))

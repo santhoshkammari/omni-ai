@@ -21,12 +21,25 @@ class Prompts:
             """
     PROD_PROMPT = """
             if you generate any code then Wrap the code or scripts part in <artifact_area>...</artifact_area> tags.
+            please use artifact area for better explanation and easy copy paster and points
             If you generate any non-code related content then DO NOT user artifact area
             {query}
             """
-    DEV_V2 = """
+    DEV_V1 = """
             if you generate any code then Wrap the code or scripts part in <artifact_area>...</artifact_area> tags.
             If you generate any non-code related content then DO NOT user artifact area
             please use artifact area for better explanation and easy copy paster and points
             {query}
+                """
+    DEV_V2 = """
+    if you generate any code/keypoints then Wrap the code/keypoints part in <artifact_area>...</artifact_area> tags.
+            please use artifact area for better and easy copy paster and points
+            If you generate any non-[code/keypoints/DepthContent] related content then DO NOT use artifact area
+            {query}
+            
+        example output:
+        <normal_content>
+        <artifact_area><code_or_keypoints>
+        </artifact_area>
+        <remaining_content_here>
                 """

@@ -1,15 +1,12 @@
-import streamlit as st
-
 import os
-
+import streamlit as st
 from hugchat import hugchat
 from hugchat.login import Login
-from configparser import ConfigParser
 
 # Log in to huggingface and grant authorization to huggingchat
 from dotenv import load_dotenv
 load_dotenv()
-from src.main.utils.prompts import Prompts
+from src.main.prompts import Prompts
 EMAIL = os.getenv("HUGGINGFACE_EMAIL")
 PASSWD = os.getenv("HUGGINGFACE_PASSWD")
 

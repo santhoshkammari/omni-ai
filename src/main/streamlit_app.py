@@ -1,17 +1,14 @@
 import time
 
-import PyPDF2
-from src.main.base import st, OmniCore
-from typing import List, Tuple, Generator
+from src.main.base import st
 from datetime import datetime
-import io
 from src.main.const import *
+from src.main.omni_mixin import OmniMixin
 from src.main.streamlit_css import OmniAiChatCSS
-from src.main.features import PdfHandler
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
-class OmniAIChatApp:
+class OmniAIChatApp(OmniMixin):
     AVAILABLE_MODELS: List[str] = AVAILABLE_MODELS
     AGENT_TYPES: List[str] = AGENT_TYPES
 
@@ -39,53 +36,6 @@ class OmniAIChatApp:
             st.session_state.agent_type = "QuestionAnswer"
         if "web_search" not in st.session_state:
             st.session_state.web_search = False
-
-    @staticmethod
-    def create_chat_instance(model: str) -> OmniCore:
-        return OmniCore(model=model)
-
-    @staticmethod
-    def get_chat_response(chatbot: OmniCore, query: str, web_search: bool = False) -> Generator:
-        return chatbot.generator(query, web_search=web_search)
-
-
-    @staticmethod
-    def data_stream(generator: Generator) -> Generator[Tuple[str, bool], None, None]:
-        flag = True
-        for chunk in generator:
-            if chunk == 'artifact':
-                flag = not flag
-            yield chunk, flag
-
-
-
-    @staticmethod
-    def update_chat_col(generator: Generator, chat_placeholder: st.empty, artifact_placeholder: st.empty,
-                        chat_holder: st.empty) -> Tuple[
-        str, str]:
-        chat_content, artifact_content = "", ""
-        for item, flag in generator:
-            if flag:
-                chat_content += item
-                chat_content = chat_content.replace("<artifact_area>", "")
-                chat_content = chat_content.replace("artifact<", "")
-                # chat_placeholder.write(chat_content)
-                chat_content = chat_content.replace("<","##")
-                # chat_placeholder.write('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
-                chat_holder.markdown('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
-
-            else:
-                artifact_content += item
-                if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
-                artifact_content = artifact_content.replace("artifact_area>", "")
-                artifact_content = artifact_content.replace("```python", "")
-                artifact_content = artifact_content.replace("python", "")
-                artifact_content = artifact_content.replace("```", "")
-                artifact_placeholder.code(artifact_content)
-                # artifact_placeholder.code(artifact_content)
-        return chat_content, artifact_content
-
-
 
 
     def render_sidebar(self):
@@ -159,8 +109,7 @@ class OmniAIChatApp:
             with col1:
                 query = st.text_area(label="user_input",placeholder = "Ask your question here:", key="user_input", height=100,
                                      label_visibility="collapsed",
-                                     # value="explain python class using very small code example and explanation"
-                                     value="what is there architecture about?"
+                                     value="explain python class with simple vehicle"
                                      )
                 splitterd_query = query.split()
                 if splitterd_query and splitterd_query[-1].lower() == 'google':
@@ -271,18 +220,3 @@ class OmniAIChatApp:
     def run(self):
         self.render_sidebar()
         self.render_chat_interface()
-
-    def handle_files(self, query, file_content, file_extension):
-        if file_extension=="pdf":
-            handler = PdfHandler(file_content=file_content)
-            context = handler.run(query,k=5)
-            prompt= f"<context>\n\n ### Attached PDF content:\n\n{context}\n</context>\n" + query
-        else:
-            ocr_text = self.perform_ocr(file_content, file_extension)
-            prompt= query + f"\n\nAttached PDF content (OCR):\n{ocr_text}"
-        return prompt
-
-def main():
-    app = OmniAIChatApp()
-    app.run()
-

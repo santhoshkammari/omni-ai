@@ -1,4 +1,5 @@
-from src.main.streamlit_app import main
+from src.main.streamlit_app import OmniAIChatApp
 
 if __name__ == '__main__':
-    main()
+    app = OmniAIChatApp()
+    app.run()

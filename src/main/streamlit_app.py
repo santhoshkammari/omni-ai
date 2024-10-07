@@ -1,36 +1,19 @@
 import time
 
 import PyPDF2
-from .base import st
+from src.main.base import st
 from src.main.omni_ai import OmniAIChat
 from typing import List, Tuple, Generator
 from datetime import datetime
 import io
-
-from src.main.streamlit_container.streamlit_css import OmniAiChatCSS
+from src.main.const import *
+from src.main.streamlit_css import OmniAiChatCSS
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
-
 class OmniAIChatApp:
-    AVAILABLE_MODELS: List[str] = [
-        'CohereForAI/c4ai-command-r-plus-08-2024',
-        'Qwen/Qwen2.5-72B-Instruct',
-        'NousResearch/Hermes-3-Llama-3.1-8B',
-        'mistralai/Mistral-Nemo-Instruct-2407',
-        'meta-llama/Meta-Llama-3.1-70B-Instruct',
-        'meta-llama/Llama-3.2-11B-Vision-Instruct',
-        'microsoft/Phi-3.5-mini-instruct',
-
-    ]
-    AGENT_TYPES: List[str] = [
-        "QuestionAnswer",
-        "Assistant",
-        "Agent",
-        "CoT",
-        "Reader",
-        "Interpreter"
-    ]
+    AVAILABLE_MODELS: List[str] = AVAILABLE_MODELS
+    AGENT_TYPES: List[str] = AGENT_TYPES
 
     def __init__(self):
         self.sidebar = st.sidebar

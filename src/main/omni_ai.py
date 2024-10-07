@@ -7,9 +7,7 @@ from configparser import ConfigParser
 # Log in to huggingface and grant authorization to huggingchat
 from dotenv import load_dotenv
 load_dotenv()
-from.prompts import Prompts
-config_parser = ConfigParser()
-config_parser.read("/home/ntlpt59/MAIN/omni-ai/src/main/backend/config.ini")
+from src.main.utils.prompts import Prompts
 EMAIL = os.getenv("HUGGINGFACE_EMAIL")
 PASSWD = os.getenv("HUGGINGFACE_PASSWD")
 
@@ -36,8 +34,7 @@ class OmniAIChat:
 
     def setup_chatbot(self):
         chatbot = hugchat.ChatBot(cookies=self.cookies.get_dict(),
-                                  default_llm=config_parser['MODEL_CONFIG'][
-                                      'MODEL_NAME'] if self.current_model is None else self.current_model)
+                                  default_llm=self.current_model)
         return chatbot
 
 

@@ -1,6 +1,5 @@
 import time
 
-import PyPDF2
 from src.main.base import st, OmniCore
 from typing import List, Tuple, Generator
 from datetime import datetime

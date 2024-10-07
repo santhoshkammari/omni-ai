@@ -64,25 +64,38 @@ class OmniAIChatApp:
                         chat_holder: st.empty) -> Tuple[
         str, str]:
         chat_content, artifact_content = "", ""
+        artifact_placeholder_markdown_flag = True # false means code
+        start_flag_artifact_placeholder = True
         for item, flag in generator:
             if flag:
                 chat_content += item
                 chat_content = chat_content.replace("<artifact_area>", "")
                 chat_content = chat_content.replace("artifact<", "")
-                # chat_placeholder.write(chat_content)
                 chat_content = chat_content.replace("<","##")
-                # chat_placeholder.write('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
+                chat_content = chat_content.replace("##/normal_content>", "")
+                chat_content = chat_content.replace("##normal_content>", "")
+
                 chat_holder.markdown('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
 
             else:
                 artifact_content += item
+                if start_flag_artifact_placeholder and (item in ["```","python","```python"]):
+                    artifact_placeholder_markdown_flag = False
+                    start_flag_artifact_placeholder = False
+
                 if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
                 artifact_content = artifact_content.replace("artifact_area>", "")
                 artifact_content = artifact_content.replace("```python", "")
                 artifact_content = artifact_content.replace("python", "")
                 artifact_content = artifact_content.replace("```", "")
-                artifact_placeholder.code(artifact_content)
-                # artifact_placeholder.code(artifact_content)
+                artifact_content = artifact_content.replace("<code_or_keypoints>", "")
+                artifact_content = artifact_content.replace("<code_or", "")
+                artifact_content = artifact_content.replace("code_or", "")
+                artifact_content = artifact_content.replace("_keypoints>", "")
+                if artifact_placeholder_markdown_flag:
+                    artifact_placeholder.markdown(artifact_content)
+                else:
+                    artifact_placeholder.code(artifact_content)
         return chat_content, artifact_content
 
 
@@ -274,7 +287,8 @@ class OmniAIChatApp:
 
     def handle_files(self, query, file_content, file_extension):
         if file_extension=="pdf":
-            handler = PdfHandler(file_content=file_content)
+            handler = PdfHandler(file_content=file_content,
+                                 word_llama_dim=WORD_LLAMA_DIM)
             context = handler.run(query,k=5)
             prompt= f"<context>\n\n ### Attached PDF content:\n\n{context}\n</context>\n" + query
         else:

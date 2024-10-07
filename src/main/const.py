@@ -1,5 +1,7 @@
 from typing import List
 
+WORD_LLAMA_DIM:int = 256
+
 AVAILABLE_MODELS:List[str] = [
     'Qwen/Qwen2.5-72B-Instruct',
     'microsoft/Phi-3.5-mini-instruct',

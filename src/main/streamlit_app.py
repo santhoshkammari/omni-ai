@@ -1,13 +1,13 @@
 import time
 
 import PyPDF2
-from src.main.base import st
-from src.main.omni_ai import OmniAIChat
+from src.main.base import st, OmniCore
 from typing import List, Tuple, Generator
 from datetime import datetime
 import io
 from src.main.const import *
 from src.main.streamlit_css import OmniAiChatCSS
+from src.main.features import PdfHandler
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
@@ -41,11 +41,11 @@ class OmniAIChatApp:
             st.session_state.web_search = False
 
     @staticmethod
-    def create_chat_instance(model: str) -> OmniAIChat:
-        return OmniAIChat(model=model)
+    def create_chat_instance(model: str) -> OmniCore:
+        return OmniCore(model=model)
 
     @staticmethod
-    def get_chat_response(chatbot: OmniAIChat, query: str, web_search: bool = False) -> Generator:
+    def get_chat_response(chatbot: OmniCore, query: str, web_search: bool = False) -> Generator:
         return chatbot.generator(query, web_search=web_search)
 
 
@@ -57,16 +57,7 @@ class OmniAIChatApp:
                 flag = not flag
             yield chunk, flag
 
-    @staticmethod
-    def perform_ocr(file_content: bytes, file_type: str) -> str:
-        reader = PyPDF2.PdfReader(io.BytesIO(file_content))
-        num_pages = len(reader.pages)
 
-        content = ""
-        for page in range(num_pages):
-            content += reader.pages[page].extract_text()
-
-        return content
 
     @staticmethod
     def update_chat_col(generator: Generator, chat_placeholder: st.empty, artifact_placeholder: st.empty,
@@ -168,7 +159,8 @@ class OmniAIChatApp:
             with col1:
                 query = st.text_area(label="user_input",placeholder = "Ask your question here:", key="user_input", height=100,
                                      label_visibility="collapsed",
-                                     value="explain python class using very small code example and explanation"
+                                     # value="explain python class using very small code example and explanation"
+                                     value="what is there architecture about?"
                                      )
                 splitterd_query = query.split()
                 if splitterd_query and splitterd_query[-1].lower() == 'google':
@@ -218,12 +210,10 @@ class OmniAIChatApp:
                 file_content = st.session_state.uploaded_file.read()
                 file_name = st.session_state.uploaded_file.name
                 file_extension = file_name.lower().split('.')[-1]
-                print("file Processing")
 
                 if file_extension in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']:
-                    ocr_text = self.perform_ocr(file_content, file_extension)
-                    query += f"\n\nAttached PDF content (OCR):\n{ocr_text}"
-
+                    with st.spinner("Analyzing pdf ..."):
+                        query = self.handle_files(query,file_content,file_extension)
 
                 current_chat["messages"].append({
                     "role": "user",
@@ -282,6 +272,15 @@ class OmniAIChatApp:
         self.render_sidebar()
         self.render_chat_interface()
 
+    def handle_files(self, query, file_content, file_extension):
+        if file_extension=="pdf":
+            handler = PdfHandler(file_content=file_content)
+            context = handler.run(query,k=5)
+            prompt= f"<context>\n\n ### Attached PDF content:\n\n{context}\n</context>\n" + query
+        else:
+            ocr_text = self.perform_ocr(file_content, file_extension)
+            prompt= query + f"\n\nAttached PDF content (OCR):\n{ocr_text}"
+        return prompt
 
 def main():
     app = OmniAIChatApp()

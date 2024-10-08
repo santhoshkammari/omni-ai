@@ -228,4 +228,4 @@ class OmniAIChatApp(OmniMixin):
         if agent_type == "AIResearcher":
             return Prompts.REASONING_SBS_PROMPT
         else:
-            return ""
+            return Prompts.DEV_PROMPT

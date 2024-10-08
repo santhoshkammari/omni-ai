@@ -1,3 +1,6 @@
+from datetime import datetime
+
+today_date = datetime.now().strftime('%a %d %b %Y, %I:%M%p')
 class Prompts:
     """ Prod is Tested and released Hurray!!!"""
     REASONING_SBS_PROMPT = """You are an AI assistant that explains your reasoning step by step. For EVERY response, without exception, provide a SINGLE JSON object with the following structure:
@@ -18,7 +21,9 @@ class Prompts:
     6. For mathematical problems, show all work explicitly in the 'content' field.
     7. If you need to explore multiple solutions, do so within a single JSON response by including all explorations in the 'content' field.
 
-    Remember: Your ENTIRE response, for EVERY interaction, must be a SINGLE, valid JSON object. Do not include any text or explanations outside of this JSON structure."""
+    Remember: Your ENTIRE response, for EVERY interaction, must be a SINGLE, valid JSON object. Do not include any text or explanations outside of this JSON structure.
+    """+f"Today Date&Time : {today_date}"
+
 
 
     DEV_PROMPT = """
@@ -35,9 +40,6 @@ class Prompts:
             7. Keep explanations, analyses, and non-code content outside of the <artifact_area> tags.
             8. Avoid unnecessary affirmations or filler phrases at the start of responses.
             11. If asked about very obscure topics, remind the user at the end that you may hallucinate in such cases.
-
-            Original query: {query}
-
             Respond to this query following the guidelines above, ensuring only actual code is wrapped in <artifact_area> tags.
             """
     PROD_PROMPT = """

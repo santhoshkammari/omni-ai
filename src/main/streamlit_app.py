@@ -4,6 +4,7 @@ from src.main.base import st
 from datetime import datetime
 from src.main.const import *
 from src.main.omni_mixin import OmniMixin
+from src.main.prompts import Prompts
 from src.main.streamlit_css import OmniAiChatCSS
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
@@ -33,7 +34,7 @@ class OmniAIChatApp(OmniMixin):
         if "uploaded_file" not in st.session_state:
             st.session_state.uploaded_file = None
         if "agent_type" not in st.session_state:
-            st.session_state.agent_type = "QuestionAnswer"
+            st.session_state.agent_type = self.AGENT_TYPES[0]
         if "web_search" not in st.session_state:
             st.session_state.web_search = False
 
@@ -109,7 +110,8 @@ class OmniAIChatApp(OmniMixin):
             with col1:
                 query = st.text_area(label="user_input",placeholder = "Ask your question here:", key="user_input", height=100,
                                      label_visibility="collapsed",
-                                     value="explain python class with simple vehicle"
+                                     # value="explain python class with simple vehicle"
+                                     value = "how many r's in strawberry"
                                      )
                 splitterd_query = query.split()
                 if splitterd_query and splitterd_query[-1].lower() == 'google':
@@ -138,7 +140,8 @@ class OmniAIChatApp(OmniMixin):
 
 
             if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
-                st.session_state.chatbot = self.create_chat_instance(selected_model)
+                system_prompt = self.get_system_prompt(st.session_state.agent_type)
+                st.session_state.chatbot = self.create_chat_instance(selected_model,system_prompt)
                 st.session_state.selected_model = selected_model
 
         uploaded_file = st.file_uploader("file uploading", type=["pdf"], key="file_uploader",
@@ -180,7 +183,7 @@ class OmniAIChatApp(OmniMixin):
         chat_placeholder = st.empty()
         artifact_placeholder = self.artifact_col.empty()
 
-        response_generator = self.get_chat_response(st.session_state.chatbot, query,web_search=web_search)
+        response_generator = self.get_chat_response(st.session_state.chatbot, st.session_state.agent_type,query,web_search=web_search)
         # Initialize chunk counting and timing
         start_time = time.time()
         chunk_count = 0
@@ -220,3 +223,9 @@ class OmniAIChatApp(OmniMixin):
     def run(self):
         self.render_sidebar()
         self.render_chat_interface()
+
+    def get_system_prompt(self, agent_type):
+        if agent_type == "AIResearcher":
+            return Prompts.REASONING_SBS_PROMPT
+        else:
+            return ""

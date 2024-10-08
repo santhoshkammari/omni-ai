@@ -11,8 +11,9 @@ EMAIL = os.getenv("HUGGINGFACE_EMAIL")
 PASSWD = os.getenv("HUGGINGFACE_PASSWD")
 
 class OmniCore:
-    def __init__(self,model = None):
+    def __init__(self,model = 0,system_prompt = ""):
         self.cookies = self.setup_login()
+        self.system_prompt = system_prompt
         self.DEFAULT_MODELS = [
             'meta-llama/Meta-Llama-3.1-70B-Instruct',
                                'CohereForAI/c4ai-command-r-plus-08-2024',
@@ -34,7 +35,8 @@ class OmniCore:
 
     def setup_chatbot(self):
         chatbot = hugchat.ChatBot(cookies=self.cookies.get_dict(),
-                                  default_llm=self.current_model)
+                                  default_llm=self.current_model,
+                                  system_prompt=self.system_prompt)
         return chatbot
 
 
@@ -62,8 +64,14 @@ class OmniCore:
         """
         return Prompts.DEV_V2.format(query=query)
 
+    def invoke(self,query,web_search=False):
+        res = self.chatbot.chat(query,web_search=web_search)
+        result = res.wait_until_done()
+        return result
+
 if __name__ == '__main__':
     chatbot = OmniCore()
     chatbot.print_stream("give me python code to add two numpy arrays sum ")
 
+from hugchat.types.model import Model
 

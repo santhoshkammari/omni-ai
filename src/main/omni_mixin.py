@@ -3,22 +3,24 @@ from typing import List, Tuple, Generator
 
 from src.main.const import WORD_LLAMA_DIM
 from src.main.features import PdfHandler
+from src.main.features.feature_main import FeatureHandlerMain
 
 
 class OmniMixin:
     @staticmethod
-    def create_chat_instance(model: str) -> OmniCore:
-        return OmniCore(model=model)
+    def create_chat_instance(model: str,system_prompt) -> OmniCore:
+        return OmniCore(model=model,system_prompt = system_prompt)
 
     @staticmethod
-    def get_chat_response(chatbot: OmniCore, query: str, web_search: bool = False) -> Generator:
-        return chatbot.generator(query, web_search=web_search)
+    def get_chat_response(chatbot: OmniCore, agent_type:str, query: str, web_search: bool = False) -> Generator:
+        handler = FeatureHandlerMain(chatbot=chatbot, agent_type=agent_type, query=query,web_search=web_search)
+        return handler.generate()
 
     @staticmethod
     def data_stream(generator: Generator) -> Generator[Tuple[str, bool], None, None]:
         flag = True
         for chunk in generator:
-            if chunk == 'artifact':
+            if chunk.strip().lower() == 'artifact':
                 flag = not flag
             yield chunk, flag
 

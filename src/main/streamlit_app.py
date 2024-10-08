@@ -110,8 +110,8 @@ class OmniAIChatApp(OmniMixin):
             with col1:
                 query = st.text_area(label="user_input",placeholder = "Ask your question here:", key="user_input", height=100,
                                      label_visibility="collapsed",
-                                     # value="explain python class with simple vehicle"
-                                     value = "how many r's in strawberry"
+                                     value="explain python class with simple vehicle"
+                                     # value = "how many r's in strawberry"
                                      )
                 splitterd_query = query.split()
                 if splitterd_query and splitterd_query[-1].lower() == 'google':

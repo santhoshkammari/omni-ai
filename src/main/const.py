@@ -1,6 +1,6 @@
 from typing import List
 
-WORD_LLAMA_DIM:int = 256
+WORD_LLAMA_DIM:int = 1024  #Options: [64, 128, 256, 512, 1024]
 
 AVAILABLE_MODELS:List[str] = [
     'meta-llama/Meta-Llama-3.1-70B-Instruct',

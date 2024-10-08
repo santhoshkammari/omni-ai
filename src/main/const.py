@@ -3,8 +3,8 @@ from typing import List
 WORD_LLAMA_DIM:int = 1024  #Options: [64, 128, 256, 512, 1024]
 
 AVAILABLE_MODELS:List[str] = [
-    'meta-llama/Meta-Llama-3.1-70B-Instruct',
     'microsoft/Phi-3.5-mini-instruct',
+    'meta-llama/Meta-Llama-3.1-70B-Instruct',
     'Qwen/Qwen2.5-72B-Instruct',
     'CohereForAI/c4ai-command-r-plus-08-2024',
         'NousResearch/Hermes-3-Llama-3.1-8B',
@@ -13,8 +13,8 @@ AVAILABLE_MODELS:List[str] = [
     ]
 
 AGENT_TYPES:List[str] = [
-        "AIResearcher",
     "QuestionAnswer",
+    "AIResearcher",
     "Agent",
         "CoT",
         "Reader",

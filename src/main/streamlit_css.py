@@ -24,10 +24,14 @@ class OmniAiChatCSS:
                     overflow-y: auto;
                 }
                 .block-container {
-                    padding-top: 1rem;
-                    padding-bottom: 1rem;
-                    padding-left: 1rem;
-                    padding-right: 1rem;
+                    padding-top: 0.5rem;
+                    padding-bottom: 0.5rem;
+                    padding-left: 0.5rem;
+                    padding-right:0.5rem;
+                    margin-right:0;
+                    margin-top:0;
+                    margin-left:0;
+                    margin-bottom:0;
                 }
                 .stSidebar {
                     margin-top: 0;
@@ -84,12 +88,12 @@ class OmniAiChatCSS:
         st.markdown("""
                         <style>
                         .chat-history {
-                             height: 50vh;
-                             width: 100vh;
+                             height: 55vh;
                     overflow-y: auto;
                     overflow-x: hidden;
                     white-space: normal;
                     word-wrap: break-word;
+                    margin-right:0
                         }
                         </style>
                     """, unsafe_allow_html=True)

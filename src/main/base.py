@@ -1,4 +1,6 @@
 import os
+from abc import abstractmethod, ABC
+
 import streamlit as st
 from hugchat import hugchat
 from hugchat.login import Login
@@ -9,6 +11,18 @@ load_dotenv()
 from src.main.prompts import Prompts
 EMAIL = os.getenv("HUGGINGFACE_EMAIL")
 PASSWD = os.getenv("HUGGINGFACE_PASSWD")
+
+class BaseOmniChatbot(ABC):
+    @abstractmethod
+    def new_conversation(self,**kwargs):
+        pass
+
+class BaseOmniCore(ABC):
+    chatbot = None
+
+    @abstractmethod
+    def generator(*args,**kwargs):
+        pass
 
 class OmniCore:
     def __init__(self,model = 0,system_prompt = ""):
@@ -62,7 +76,8 @@ class OmniCore:
         Enhances the user query with a system prompt that encourages structured thinking,
         comprehensive analysis, and formatted output with specific artifact areas for code.
         """
-        return Prompts.DEV_V2.format(query=query)
+        return Prompts.QUERY_PROMPT.format(query=query)
+        # return query
 
     def invoke(self,query,web_search=False):
         res = self.chatbot.chat(query,web_search=web_search)
@@ -72,6 +87,3 @@ class OmniCore:
 if __name__ == '__main__':
     chatbot = OmniCore()
     chatbot.print_stream("give me python code to add two numpy arrays sum ")
-
-from hugchat.types.model import Model
-

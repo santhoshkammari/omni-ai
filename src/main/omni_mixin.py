@@ -31,32 +31,35 @@ class OmniMixin:
         chat_content, artifact_content = "", ""
         artifact_placeholder_markdown_flag = True  # false means code
         start_flag_artifact_placeholder = True
+        previous_back_tick = False
+        python_script_start_tag = False
         for item, flag in generator:
             if flag:
+                start_flag_artifact_placeholder = True
                 chat_content += item
-                chat_content = chat_content.replace("<artifact_area>", "")
-                chat_content = chat_content.replace("artifact<", "")
-                chat_content = chat_content.replace("<", "##")
-                chat_content = chat_content.replace("##/normal_content>", "")
-                chat_content = chat_content.replace("##normal_content>", "")
-
+                chat_content = OmniMixin.filter_chat_content(chat_content)
                 chat_holder.markdown('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
 
             else:
                 artifact_content += item
-                if start_flag_artifact_placeholder and (item in ["```", "python", "```python"]):
+                if item =="```":
+                    previous_back_tick = True
+                    continue
+                if previous_back_tick and item == "python":
+                    python_script_start_tag = True
+                    previous_back_tick = False
+                    continue
+                if item == "```" and python_script_start_tag:
+                    python_script_start_tag = False
+                    continue
+
+                if start_flag_artifact_placeholder and (item.lower() in ["```", "python", "```python",
+                                                                         "class","def"]):
                     artifact_placeholder_markdown_flag = False
                     start_flag_artifact_placeholder = False
 
-                if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
-                artifact_content = artifact_content.replace("artifact_area>", "")
-                artifact_content = artifact_content.replace("```python", "")
-                artifact_content = artifact_content.replace("python", "")
-                artifact_content = artifact_content.replace("```", "")
-                artifact_content = artifact_content.replace("<code_or_keypoints>", "")
-                artifact_content = artifact_content.replace("<code_or", "")
-                artifact_content = artifact_content.replace("code_or", "")
-                artifact_content = artifact_content.replace("_keypoints>", "")
+                artifact_content = OmniMixin.filter_artifact_content(artifact_content)
+
                 if artifact_placeholder_markdown_flag:
                     artifact_placeholder.markdown(artifact_content)
                 else:
@@ -73,3 +76,26 @@ class OmniMixin:
         else:
             prompt = query
         return prompt
+
+    @staticmethod
+    def filter_chat_content(chat_content):
+        chat_content = chat_content.replace("<artifact_area>", "")
+        chat_content = chat_content.replace("artifact<", "")
+        chat_content = chat_content.replace("<", "##")
+        chat_content = chat_content.replace("```python", "")
+        chat_content = chat_content.replace("##/normal_content>", "")
+        chat_content = chat_content.replace("##normal_content>", "")
+        return chat_content
+
+    @staticmethod
+    def filter_artifact_content(artifact_content):
+        if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
+        artifact_content = artifact_content.replace("artifact_area>", "")
+        artifact_content = artifact_content.replace("```python", "")
+        # artifact_content = artifact_content.replace("python", "")
+        artifact_content = artifact_content.replace("```", "")
+        artifact_content = artifact_content.replace("<code_or_keypoints>", "")
+        artifact_content = artifact_content.replace("<code_or", "")
+        artifact_content = artifact_content.replace("code_or", "")
+        artifact_content = artifact_content.replace("_keypoints>", "")
+        return artifact_content

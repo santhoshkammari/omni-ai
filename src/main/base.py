@@ -62,7 +62,8 @@ class OmniCore:
         Enhances the user query with a system prompt that encourages structured thinking,
         comprehensive analysis, and formatted output with specific artifact areas for code.
         """
-        return Prompts.DEV_V2.format(query=query)
+        return Prompts.QUERY_PROMPT.format(query=query)
+        # return query
 
     def invoke(self,query,web_search=False):
         res = self.chatbot.chat(query,web_search=web_search)

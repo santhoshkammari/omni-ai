@@ -62,7 +62,7 @@ class OmniAIChatApp(OmniMixin):
             OmniAiChatCSS.render_main()
             OmniAiChatCSS.render_title()
 
-            col1, col2 = st.columns([1,1],gap='small')
+            col1, col2 = st.columns([53,47],gap='small')
 
             self.chat_col = col1
             self.artifact_col = col2.container(height=500,border=True)
@@ -108,7 +108,10 @@ class OmniAIChatApp(OmniMixin):
             col1, col2 = st.columns([6, 1], gap='small',vertical_alignment='bottom')
 
             with col1:
-                query = st.text_area(label="user_input",placeholder = "Ask your question here:", key="user_input", height=100,
+                query = st.text_area(label="user_input",
+                                     placeholder = "Ask your question here:",
+                                     key="user_input",
+                                     # height=100,
                                      label_visibility="collapsed",
                                      value="explain python class with simple vehicle"
                                      # value = "how many r's in strawberry"
@@ -141,7 +144,12 @@ class OmniAIChatApp(OmniMixin):
 
             if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
                 system_prompt = self.get_system_prompt(st.session_state.agent_type)
-                st.session_state.chatbot = self.create_chat_instance(selected_model,system_prompt)
+                chatbot_instance = self.create_chat_instance(selected_model,system_prompt)
+                chatbot_instance.chatbot.new_conversation(
+                    modelIndex=self.AVAILABLE_MODELS.index(selected_model),
+                    system_prompt=system_prompt,
+                    switch_to=True)
+                st.session_state.chatbot = chatbot_instance
                 st.session_state.selected_model = selected_model
 
         uploaded_file = st.file_uploader("file uploading", type=["pdf"], key="file_uploader",
@@ -228,4 +236,4 @@ class OmniAIChatApp(OmniMixin):
         if agent_type == "AIResearcher":
             return Prompts.REASONING_SBS_PROMPT
         else:
-            return Prompts.DEV_PROMPT
+            return Prompts.WORKING_SYSTEM_PROMPT1

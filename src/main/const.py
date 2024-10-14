@@ -20,3 +20,6 @@ AGENT_TYPES:List[str] = [
         "Reader",
         "Interpreter"
     ]
+
+## height adjustments
+ARTIFACT_COLUMN_HEIGHT:int = 750

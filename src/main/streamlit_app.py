@@ -65,7 +65,7 @@ class OmniAIChatApp(OmniMixin):
             col1, col2 = st.columns([53,47],gap='small')
 
             self.chat_col = col1
-            self.artifact_col = col2.container(height=500,border=True)
+            self.artifact_col = col2.container(height=ARTIFACT_COLUMN_HEIGHT,border=True)
 
             with self.chat_col:
                 self.handle_user_input()
@@ -116,6 +116,7 @@ class OmniAIChatApp(OmniMixin):
                                      value="explain python class with simple vehicle"
                                      # value = "how many r's in strawberry"
                                      )
+                query+="\nPLEASE USE artifact_area for codes"
                 splitterd_query = query.split()
                 if splitterd_query and splitterd_query[-1].lower() == 'google':
                     st.session_state.web_search = True

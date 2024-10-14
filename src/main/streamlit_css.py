@@ -88,7 +88,7 @@ class OmniAiChatCSS:
         st.markdown("""
                         <style>
                         .chat-history {
-                             height: 55vh;
+                             height: 65vh;
                     overflow-y: auto;
                     overflow-x: hidden;
                     white-space: normal;

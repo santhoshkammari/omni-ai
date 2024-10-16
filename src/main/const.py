@@ -11,7 +11,6 @@ AVAILABLE_MODELS:List[str] = [
         'mistralai/Mistral-Nemo-Instruct-2407',
         'meta-llama/Llama-3.2-11B-Vision-Instruct'
     ]
-
 AGENT_TYPES:List[str] = [
     "QuestionAnswer",
     "Reasoning",

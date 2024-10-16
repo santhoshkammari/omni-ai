@@ -14,11 +14,11 @@ AVAILABLE_MODELS:List[str] = [
 
 AGENT_TYPES:List[str] = [
     "QuestionAnswer",
-    "AIResearcher",
-    "Agent",
-        "CoT",
-        "Reader",
-        "Interpreter"
+    "Reasoning",
+    "GoogleSearchAI",
+        "SearchAI",
+        "GoogleSearch",
+        "DeepGoogleSearch",
     ]
 
 ## height adjustments

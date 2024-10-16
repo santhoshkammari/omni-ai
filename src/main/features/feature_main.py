@@ -14,11 +14,11 @@ class FeatureHandlerMain:
             ai_researcher = AIResearcher()
             return ai_researcher.generate_response(self.query,self.chatbot,web_search=self.web_search)
         elif self.agent_type == "GoogleSearchAI":
-            return google_search_ai(self.query)
+            return yield_google_search_ai(self.query)
         elif self.agent_type == "SearchAI":
-            return search_ai(self.query)
+            return yield_search_ai(self.query)
         elif self.agent_type == "GoogleSearch":
-            return google_search(self.query)
+            return yield_google_search(self.query)
         elif self.agent_type == "DeepGoogleSearch":
-            return deep_google_search(self.query)
+            return yield_deep_google_search(self.query)
 

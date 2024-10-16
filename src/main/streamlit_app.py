@@ -82,7 +82,7 @@ class OmniAIChatApp(OmniMixin):
     def update_metrics(self):
         self.metrics_container.button(
             label=f"{self.chunks_per_second}/s, {self.elapsed_time}s",
-            key="metrics_button_{}".format(self.chunks_per_second),
+            key="metrics_button_{}".format(datetime.now().timestamp()),
             disabled=True
         )
 

@@ -108,22 +108,23 @@ class OmniAIChatApp(OmniMixin):
             col1, col2 = st.columns([6, 1], gap='small',vertical_alignment='bottom')
 
             with col1:
-                query = st.text_area(label="user_input",
-                                     placeholder = "Ask your question here:",
-                                     key="user_input",
-                                     # height=100,
-                                     label_visibility="collapsed",
-                                     value="explain python class with simple vehicle"
+                # query = st.text_area(label="user_input",
+                #                      placeholder = "Ask your question here:",
+                #                      key="user_input",
+                #                      height=100,
+                                     # label_visibility="collapsed",
+                                     # value="explain python class with simple vehicle"
                                      # value = "how many r's in strawberry"
-                                     )
-                query+="\nPLEASE USE artifact_area for codes"
-                splitterd_query = query.split()
-                if splitterd_query and splitterd_query[-1].lower() == 'google':
-                    st.session_state.web_search = True
+                                     # )
+                if query := st.chat_input(placeholder="How can Claude help you today?"):
+                    query+="\nPLEASE USE artifact_area for codes"
+                    splitterd_query = query.split()
+                    if splitterd_query and splitterd_query[-1].lower() == 'google':
+                        st.session_state.web_search = True
 
 
             with col2:
-                send_button = st.button(label="", key="send_button", icon=":material/arrow_upward:", type="primary")
+                # send_button = st.button(label="", key="send_button", icon=":material/arrow_upward:", type="primary")
                 self.metrics_container = st.empty()
                 self.update_metrics()
 
@@ -161,7 +162,7 @@ class OmniAIChatApp(OmniMixin):
             st.success(f"File {uploaded_file.name} uploaded successfully!")
 
 
-        if send_button and (query or getattr(st.session_state, 'uploaded_file', None)):
+        if query or getattr(st.session_state, 'uploaded_file', None):
             if not st.session_state.current_chat_id:
                 self.create_new_chat()
 

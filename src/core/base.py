@@ -6,7 +6,7 @@ from hugchat.login import Login
 # Log in to huggingface and grant authorization to huggingchat
 from dotenv import load_dotenv
 load_dotenv()
-from src.main.prompts import Prompts
+from .prompts import Prompts
 from ailitellm import yieldai
 
 class OmniCore:

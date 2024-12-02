@@ -1,4 +1,4 @@
-from src.main.streamlit_app import OmniAIChatApp
+from core.streamlit_app import OmniAIChatApp
 
 if __name__ == '__main__':
     app = OmniAIChatApp()

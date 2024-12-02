@@ -1,11 +1,11 @@
 import time
 
-from src.main.base import st
+from .base import st
 from datetime import datetime
-from src.main.const import *
-from src.main.omni_mixin import OmniMixin
-from src.main.prompts import Prompts
-from src.main.streamlit_css import OmniAiChatCSS
+from .const import *
+from .omni_mixin import OmniMixin
+from .prompts import Prompts
+from .streamlit_css import OmniAiChatCSS
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Omni AI
-Comment=Start Omni AI application
-Exec=bash -c 'echo "Starting Omni AI installation and launch process..."; sleep 2; if [ ! -d "$HOME/omni-ai" ]; then echo "Cloning repository..."; git clone https://github.com/santhoshkammari/omni-ai.git $HOME/omni-ai; else cd $HOME/omni-ai && git pull; fi; echo "Repository updated."; sleep 2; cd $HOME/omni-ai; echo "Changed to omni-ai directory."; sleep 2; echo "Making install.sh executable..."; chmod +x install.sh; echo "Running install.sh..."; ./install.sh; if [ $? -ne 0 ]; then echo "Installation failed. Please check the error messages above."; read -p "Press Enter to exit"; exit 1; fi; echo "install.sh completed."; sleep 2; echo "Opening Omni AI in web browser..."; xdg-open http://localhost:8501; echo "Process completed. This window will close in 10 seconds."; sleep 10'Terminal=true
-Categories=Development;

@@ -1,9 +1,9 @@
-from src.main.base import st, OmniCore
+from .base import st, OmniCore
 from typing import List, Tuple, Generator
 
-from src.main.const import WORD_LLAMA_DIM
-from src.main.features import PdfHandler
-from src.main.features.feature_main import FeatureHandlerMain
+from .const import WORD_LLAMA_DIM
+from .features import PdfHandler
+from .features.feature_main import FeatureHandlerMain
 
 
 class OmniMixin:

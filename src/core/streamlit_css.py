@@ -1,4 +1,4 @@
-from src.main.base import st
+from .base import st
 
 
 class OmniAiChatCSS:

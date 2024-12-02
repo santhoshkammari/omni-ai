@@ -1,1 +1,1 @@
-from .handle_pdf import PdfHandler
+# from .handle_pdf import PdfHandler

@@ -2,7 +2,7 @@ from .base import st, OmniCore
 from typing import List, Tuple, Generator
 
 from .const import WORD_LLAMA_DIM
-from .features import PdfHandler
+# from .features import PdfHandler
 from .features.feature_main import FeatureHandlerMain
 
 

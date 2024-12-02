@@ -1,13 +1,8 @@
-import os
 import streamlit as st
-from hugchat import hugchat
-from hugchat.login import Login
 
-# Log in to huggingface and grant authorization to huggingchat
-from dotenv import load_dotenv
-load_dotenv()
-from .prompts import Prompts
 from ailitellm import yieldai
+from .prompts import Prompts
+
 
 class OmniCore:
     def __init__(self,model = 0,system_prompt = ""):
@@ -23,9 +18,6 @@ class OmniCore:
 
 
     def generator(self,query,web_search= False):
-        """
-        Generator function to stream responses from the chatbot.
-        """
         query = self._add_system_prompt(query)
         for resp in yieldai(messages_or_prompt=query):
             if resp:
@@ -36,25 +28,11 @@ class OmniCore:
             print(x,end= "",flush=True)
 
     def _add_system_prompt(self, query):
-        """
-        Enhances the user query with a system prompt that encourages structured thinking,
-        comprehensive analysis, and formatted output with specific artifact areas for code.
-        """
         user_query = Prompts.QUERY_PROMPT.format(query=query)
         return [
             {"role":"system","content":self.system_prompt},
             {"role":"user","content":user_query}
         ]
-        # return query
 
     def invoke(self,query,web_search=False):
-        res = self.chatbot.chat(query,web_search=web_search)
-        result = res.wait_until_done()
-        return result
-
-if __name__ == '__main__':
-    chatbot = OmniCore()
-    chatbot.print_stream("give me python code to add two numpy arrays sum ")
-
-from hugchat.types.model import Model
-
+        return self.generator(query)

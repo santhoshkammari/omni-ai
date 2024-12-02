@@ -7,37 +7,19 @@ from hugchat.login import Login
 from dotenv import load_dotenv
 load_dotenv()
 from src.main.prompts import Prompts
-EMAIL = os.getenv("HUGGINGFACE_EMAIL")
-PASSWD = os.getenv("HUGGINGFACE_PASSWD")
+from ailitellm import yieldai
 
 class OmniCore:
     def __init__(self,model = 0,system_prompt = ""):
-        self.cookies = self.setup_login()
         self.system_prompt = system_prompt
         self.DEFAULT_MODELS = [
-            'meta-llama/Meta-Llama-3.1-70B-Instruct',
-                               'CohereForAI/c4ai-command-r-plus-08-2024',
-                               'Qwen/Qwen2.5-72B-Instruct',
-                               'meta-llama/Llama-3.2-11B-Vision-Instruct',
-                               'NousResearch/Hermes-3-Llama-3.1-8B',
-                               'mistralai/Mistral-Nemo-Instruct-2407',
-                               'microsoft/Phi-3.5-mini-instruct'
-                               ]
+    "Qwen/Qwen2.5-72B-Instruct",
+    "Qwen/QwQ-32B-Preview",
+    "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "NousResearch/Hermes-3-Llama-3.1-8B",
+    "microsoft/Phi-3.5-mini-instruct"
+]
         self.current_model = model
-        self.chatbot  = self.setup_chatbot()
-
-
-    def setup_login(self):
-        cookie_path_dir = "cookies/"  # NOTE: trailing slash (/) is required to avoid errors
-        sign = Login(EMAIL, PASSWD)
-        cookies = sign.login(cookie_dir_path=cookie_path_dir, save_cookies=True)
-        return cookies
-
-    def setup_chatbot(self):
-        chatbot = hugchat.ChatBot(cookies=self.cookies.get_dict(),
-                                  default_llm=self.current_model,
-                                  system_prompt=self.system_prompt)
-        return chatbot
 
 
     def generator(self,query,web_search= False):
@@ -45,13 +27,9 @@ class OmniCore:
         Generator function to stream responses from the chatbot.
         """
         query = self._add_system_prompt(query)
-        for resp in self.chatbot.chat(
-            query,
-            stream=True,
-            web_search=web_search
-        ):
+        for resp in yieldai(messages_or_prompt=query):
             if resp:
-                yield resp['token']
+                yield resp
 
     def print_stream(self,query,web_search = False):
         for x in self.generator(query,web_search):
@@ -62,7 +40,11 @@ class OmniCore:
         Enhances the user query with a system prompt that encourages structured thinking,
         comprehensive analysis, and formatted output with specific artifact areas for code.
         """
-        return Prompts.QUERY_PROMPT.format(query=query)
+        user_query = Prompts.QUERY_PROMPT.format(query=query)
+        return [
+            {"role":"system","content":self.system_prompt},
+            {"role":"user","content":user_query}
+        ]
         # return query
 
     def invoke(self,query,web_search=False):

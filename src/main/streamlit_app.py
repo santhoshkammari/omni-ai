@@ -146,10 +146,10 @@ class OmniAIChatApp(OmniMixin):
             if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
                 system_prompt = self.get_system_prompt(st.session_state.agent_type)
                 chatbot_instance = self.create_chat_instance(selected_model,system_prompt)
-                chatbot_instance.chatbot.new_conversation(
-                    modelIndex=self.AVAILABLE_MODELS.index(selected_model),
-                    system_prompt=system_prompt,
-                    switch_to=True)
+                # chatbot_instance.chatbot.new_conversation(
+                #     modelIndex=self.AVAILABLE_MODELS.index(selected_model),
+                #     system_prompt=system_prompt,
+                #     switch_to=True)
                 st.session_state.chatbot = chatbot_instance
                 st.session_state.selected_model = selected_model
 

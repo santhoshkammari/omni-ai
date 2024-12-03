@@ -113,7 +113,7 @@ class OmniAIChatApp(OmniMixin):
 
 
         with selection_container:
-            sc1, sc2, sc3, sc4 = st.columns([1, 1, 1, 1])
+            sc1, sc2, sc3, sc4 = st.columns([1, 1, 1, 1],gap='small')
             with sc1:
                 selected_model = st.selectbox("Select a model", list(MODELS_TITLE_MAP.keys()), label_visibility="hidden",
                                               key="model1")
@@ -144,12 +144,12 @@ class OmniAIChatApp(OmniMixin):
                 st.session_state.chatbot = chatbot_instance
                 st.session_state.selected_model = selected_model
 
-        uploaded_file = st.file_uploader("file uploading", type=["pdf"], key="file_uploader",
-                                         label_visibility="collapsed")
+            uploaded_file = st.file_uploader("file uploading", type=["pdf"], key="file_uploader",
+                                             label_visibility="collapsed")
 
-        if uploaded_file is not None:
-            st.session_state.uploaded_file = uploaded_file
-            st.success(f"File {uploaded_file.name} uploaded successfully!")
+            if uploaded_file is not None:
+                st.session_state.uploaded_file = uploaded_file
+                st.success(f"File {uploaded_file.name} uploaded successfully!")
 
 
         if query or getattr(st.session_state, 'uploaded_file', None):

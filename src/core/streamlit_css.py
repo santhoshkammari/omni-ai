@@ -60,7 +60,8 @@ class OmniAiChatCSS:
                         }
                         .small-title {
                             font-size: 24px;
-                            # color: #4a4a4a;
+                            color: purple;
+                            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
                             font-weight: 600;
                             text-align: center;
                             padding: 5px 0;
@@ -88,7 +89,7 @@ class OmniAiChatCSS:
         st.markdown("""
                         <style>
                         .chat-history {
-                             height: 65vh;
+                             height: 50vh;
                     overflow-y: auto;
                     overflow-x: hidden;
                     white-space: normal;

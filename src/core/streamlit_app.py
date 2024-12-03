@@ -48,6 +48,10 @@ class OmniAIChatApp(OmniMixin):
             if st.sidebar.button(f"{chat_info['name']} - {chat_info['timestamp'][:10]}"):
                 st.session_state.current_chat_id = chat_id
 
+        st.sidebar.write("Model Information")
+        for k,v in MODELS_TITLE_MAP.items():
+            st.sidebar.write(f'{k} - {v}')
+
     def create_new_chat(self):
         chat_id = datetime.now().strftime("%Y%m%d%H%M%S")
         st.session_state.chats[chat_id] = {
@@ -91,15 +95,6 @@ class OmniAIChatApp(OmniMixin):
         input_container = st.container()
         selection_container = st.container()
 
-        def upload_file():
-            uploaded_file = st.file_uploader("Choose a file", type=["pdf"], key="dfd",
-                                             label_visibility="collapsed")
-
-            if uploaded_file is not None:
-                st.session_state.uploaded_file = uploaded_file
-                st.success(f"File {uploaded_file.name} uploaded successfully!")
-                print(f"Uploaded file type: {type(uploaded_file)}")
-
         with input_container:
             OmniAiChatCSS.render_chat_history_area()
             self.chat_history_area = st.container()
@@ -108,37 +103,32 @@ class OmniAIChatApp(OmniMixin):
             col1, col2 = st.columns([6, 1], gap='small',vertical_alignment='bottom')
 
             with col1:
-                # query = st.text_area(label="user_input",
-                #                      placeholder = "Ask your question here:",
-                #                      key="user_input",
-                #                      height=100,
-                                     # label_visibility="collapsed",
-                                     # value="explain python class with simple vehicle"
-                                     # value = "how many r's in strawberry"
-                                     # )
                 if query := st.chat_input(placeholder="How can Claude help you today?"):
                     query+="\nPLEASE USE artifact_area for codes"
-                    splitterd_query = query.split()
-                    if splitterd_query and splitterd_query[-1].lower() == 'google':
-                        st.session_state.web_search = True
-
 
             with col2:
-                # send_button = st.button(label="", key="send_button", icon=":material/arrow_upward:", type="primary")
                 self.metrics_container = st.empty()
                 self.update_metrics()
 
 
 
         with selection_container:
-            sc1,sc2 = st.columns([1,1])
+            sc1, sc2, sc3, sc4 = st.columns([1, 1, 1, 1])
             with sc1:
-                selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="collapsed",
-                                              key="model")
+                selected_model = st.selectbox("Select a model", list(MODELS_TITLE_MAP.keys()), label_visibility="hidden",
+                                              key="model1")
+                selected_model = MODELS_TITLE_MAP[selected_model]
+
+            with sc3:
+                selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="hidden",
+                                              key="model3")
+            with sc4:
+                selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="hidden",
+                                              key="model4")
 
             with sc2:
                 agent_type = st.selectbox("Agent type",self.AGENT_TYPES,
-                                              label_visibility="collapsed",
+                                              label_visibility="hidden",
                                               key="agent_type")
                 if st.session_state.agent_type is None or st.session_state.agent_type != agent_type:
                     st.session_state.agent_type = agent_type

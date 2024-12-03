@@ -60,10 +60,10 @@ class OmniMixin:
 
                 artifact_content = OmniMixin.filter_artifact_content(artifact_content)
 
-                if artifact_placeholder_markdown_flag:
-                    artifact_placeholder.markdown(artifact_content)
-                else:
-                    artifact_placeholder.code(artifact_content)
+                # if artifact_placeholder_markdown_flag:
+                #     artifact_placeholder.markdown(artifact_content)
+                # else:
+                artifact_placeholder.code(artifact_content)
         return chat_content, artifact_content
 
     @staticmethod
@@ -91,6 +91,8 @@ class OmniMixin:
     def filter_artifact_content(artifact_content):
         if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
         artifact_content = artifact_content.replace("artifact_area>", "")
+        artifact_content = artifact_content.replace("artifactarea>", "")
+        artifact_content = artifact_content.replace("artifactive>", "")
         artifact_content = artifact_content.replace("```python", "")
         # artifact_content = artifact_content.replace("python", "")
         artifact_content = artifact_content.replace("```", "")

@@ -6,6 +6,8 @@ A chatbot system using huggingchat with most capable model qwen2.5-70B model , t
 
 ![Chatbot Image + Artifact](figs/render_with_artifact.png)
 
+![Chatbot Image + Artifact After UI Improvement](figs/render_with_artifact_improved_ui.png)
+
 
 ## Future Plan
 

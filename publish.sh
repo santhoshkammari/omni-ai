@@ -1,0 +1,3 @@
+poetry build
+
+poetry publish

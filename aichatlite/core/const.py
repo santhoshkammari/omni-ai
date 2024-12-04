@@ -26,10 +26,9 @@ MODELS_TITLE_MAP: Dict[str, str] = {
 AGENT_TYPES:List[str] = [
     "QuestionAnswer",
     "Reasoning",
-    "GoogleSearchAI",
-        "SearchAI",
-        "GoogleSearch",
-        "DeepGoogleSearch",
+    "FastSearchAI",
+    "DeepSearchAI",
+    "IntelligentSearchAI"
     ]
 
 

@@ -113,15 +113,12 @@ class OmniAIChatApp(OmniMixin):
 
 
         with selection_container:
-            sc1, sc2, sc3, sc4 = st.columns([1, 1, 1, 1],gap='small')
+            sc1, sc2, sc4 = st.columns([1, 1, 1],gap='small')
             with sc1:
                 selected_model = st.selectbox("Select a model", list(MODELS_TITLE_MAP.keys()), label_visibility="hidden",
                                               key="model1")
                 selected_model = MODELS_TITLE_MAP[selected_model]
 
-            with sc3:
-                selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="hidden",
-                                              key="model3")
             with sc4:
                 selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="hidden",
                                               key="model4")
@@ -177,13 +174,20 @@ class OmniAIChatApp(OmniMixin):
             if query:
                 current_chat["messages"].append({"role": "user", "content": query})
 
-            self.process_ai_response(query,web_search = st.session_state.web_search)
+            self.process_ai_response(query,web_search = st.session_state.web_search,
+                                     agent_type = st.session_state.agent_type)
 
-    def process_ai_response(self, query: str,web_search=False):
+    def process_ai_response(self, query: str,web_search=False,
+                            agent_type =None):
         chat_placeholder = st.empty()
         artifact_placeholder = self.artifact_col.empty()
 
-        response_generator = self.get_chat_response(st.session_state.chatbot, st.session_state.agent_type,query,web_search=web_search)
+        response_generator = self.get_chat_response(
+            chatbot=st.session_state.chatbot,
+            agent_type=agent_type,
+            query=query,
+            web_search=web_search
+        )
         # Initialize chunk counting and timing
         start_time = time.time()
         chunk_count = 0

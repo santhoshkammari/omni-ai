@@ -41,7 +41,7 @@ pip install aichatlite
 Launch the UI with a single command:
 
 ```bash
-claude
+claude-chat
 ```
 
 This will start the web interface on port 8501.

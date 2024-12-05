@@ -17,9 +17,10 @@ class OmniCore:
         self.current_model = model
 
 
-    def generator(self,query,web_search= False):
-        query = self._add_system_prompt(query)
-        for resp in yieldai(messages_or_prompt=query):
+    def generator(self,query,web_search= False,system_prompt = ""):
+        messages = self._add_system_prompt(query,
+                                        system_prompt=system_prompt)
+        for resp in yieldai(messages_or_prompt=messages):
             if resp:
                 yield resp
 
@@ -27,10 +28,10 @@ class OmniCore:
         for x in self.generator(query,web_search):
             print(x,end= "",flush=True)
 
-    def _add_system_prompt(self, query):
+    def _add_system_prompt(self, query,system_prompt= ""):
         user_query = Prompts.QUERY_PROMPT.format(query=query)
         return [
-            {"role":"system","content":self.system_prompt},
+            {"role":"system","content":system_prompt or self.system_prompt},
             {"role":"user","content":user_query}
         ]
 

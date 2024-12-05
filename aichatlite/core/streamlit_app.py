@@ -1,11 +1,16 @@
 import time
 
+import aipromptlite
+
 from .base import st
 from datetime import datetime
+
+from .baseprompt import BasePrompt
 from .const import *
 from .omni_mixin import OmniMixin
 from .prompts import Prompts
 from .streamlit_css import OmniAiChatCSS
+from ..utils.prompt_names_fetcher import get_available_prompts
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
@@ -37,6 +42,8 @@ class OmniAIChatApp(OmniMixin):
             st.session_state.agent_type = self.AGENT_TYPES[0]
         if "web_search" not in st.session_state:
             st.session_state.web_search = False
+        if "current_prompt" not in st.session_state:
+            st.session_state.current_prompt = getattr(aipromptlite, "AILITE_X_CLAUDE_PROMPT")
 
 
     def render_sidebar(self):
@@ -104,7 +111,7 @@ class OmniAIChatApp(OmniMixin):
 
             with col1:
                 if query := st.chat_input(placeholder="How can Claude help you today?"):
-                    query+="\nPLEASE USE artifact_area for codes"
+                    query+=""
 
             with col2:
                 self.metrics_container = st.empty()
@@ -113,18 +120,12 @@ class OmniAIChatApp(OmniMixin):
 
 
         with selection_container:
-            sc1, sc2, sc3, sc4 = st.columns([1, 1, 1, 1],gap='small')
+            sc1, sc2, sc3 = st.columns([1, 1, 1],gap='small')
             with sc1:
                 selected_model = st.selectbox("Select a model", list(MODELS_TITLE_MAP.keys()), label_visibility="hidden",
                                               key="model1")
                 selected_model = MODELS_TITLE_MAP[selected_model]
 
-            with sc3:
-                selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="hidden",
-                                              key="model3")
-            with sc4:
-                selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="hidden",
-                                              key="model4")
 
             with sc2:
                 agent_type = st.selectbox("Agent type",self.AGENT_TYPES,
@@ -132,6 +133,21 @@ class OmniAIChatApp(OmniMixin):
                                               key="agent_type")
                 if st.session_state.agent_type is None or st.session_state.agent_type != agent_type:
                     st.session_state.agent_type = agent_type
+
+
+            with sc3:
+                prompt_name = st.selectbox("Select a model",
+                                           get_available_prompts(),
+                                           label_visibility="hidden",
+                                           key="model3"
+                                           )
+                if prompt_name != 'DEFAULT_PROMPT':
+                    st.session_state.current_prompt = getattr(aipromptlite, prompt_name)
+
+            # with sc4:
+            #     selected_model = st.selectbox("Select a model", self.AVAILABLE_MODELS, label_visibility="hidden",
+            #                                   key="model4")
+
 
 
             if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
@@ -177,13 +193,16 @@ class OmniAIChatApp(OmniMixin):
             if query:
                 current_chat["messages"].append({"role": "user", "content": query})
 
-            self.process_ai_response(query,web_search = st.session_state.web_search)
+            self.process_ai_response(query,web_search = st.session_state.web_search,
+                                     system_prompt = st.session_state.current_prompt)
 
-    def process_ai_response(self, query: str,web_search=False):
+    def process_ai_response(self, query: str, web_search=False,system_prompt=""):
+        system_prompt = self.add_time_and_artifact_to_system_prompt(system_prompt=system_prompt)
         chat_placeholder = st.empty()
         artifact_placeholder = self.artifact_col.empty()
 
-        response_generator = self.get_chat_response(st.session_state.chatbot, st.session_state.agent_type,query,web_search=web_search)
+        response_generator = self.get_chat_response(st.session_state.chatbot, st.session_state.agent_type,query,web_search=web_search,
+                                                    system_prompt=system_prompt)
         # Initialize chunk counting and timing
         start_time = time.time()
         chunk_count = 0
@@ -229,3 +248,6 @@ class OmniAIChatApp(OmniMixin):
             return Prompts.REASONING_SBS_PROMPT
         else:
             return Prompts.WORKING_SYSTEM_PROMPT1
+
+    def add_time_and_artifact_to_system_prompt(self, system_prompt):
+        return BasePrompt.TODAY_DATE + system_prompt + "\n" + BasePrompt.ARTIFACT

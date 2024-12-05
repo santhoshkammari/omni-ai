@@ -12,8 +12,10 @@ class OmniMixin:
         return OmniCore(model=model,system_prompt = system_prompt)
 
     @staticmethod
-    def get_chat_response(chatbot: OmniCore, agent_type:str, query: str, web_search: bool = False) -> Generator:
-        handler = FeatureHandlerMain(chatbot=chatbot, agent_type=agent_type, query=query,web_search=web_search)
+    def get_chat_response(chatbot: OmniCore, agent_type:str, query: str, web_search: bool = False,
+                          system_prompt="") -> Generator:
+        handler = FeatureHandlerMain(chatbot=chatbot, agent_type=agent_type, query=query,web_search=web_search,
+                                     system_prompt=system_prompt)
         return handler.generate()
 
     @staticmethod

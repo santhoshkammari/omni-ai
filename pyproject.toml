@@ -15,6 +15,7 @@ include = [
     "chat_run.py"
 ]
 
+
 [tool.poetry.dependencies]
 python = "^3.10"
 streamlit="^1.40.2"

@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "aichatlite"
-version = "0.1.5"
+name = "aichatlite-web"
+version = "0.0.7"
 description = "claude chat"
 authors = ["Kammari Santhosh"]
 readme = "README.md"

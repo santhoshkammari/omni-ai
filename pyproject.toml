@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aichatlite-web"
-version = "0.0.9"
+version = "0.0.10"
 description = "claude chat"
 authors = ["Kammari Santhosh"]
 readme = "README.md"
@@ -8,7 +8,7 @@ license = "MIT License"
 repository = "https://github.cov0m/username/sa"
 keywords = ["claude","claude_chat"]
 packages = [
-    {include = "aichatlite"}
+    {include = "aichatlite_web"}
 ]
 include = [
     "chat_gui.py",

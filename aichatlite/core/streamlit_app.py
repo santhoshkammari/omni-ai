@@ -122,9 +122,10 @@ class OmniAIChatApp(OmniMixin):
         with selection_container:
             sc1, sc2, sc3 = st.columns([1, 1, 1],gap='small')
             with sc1:
-                selected_model = st.selectbox("Select a model", list(MODELS_TITLE_MAP.keys()), label_visibility="hidden",
+                models = list(MODELS_TITLE_MAP.keys()) + AVAILABLE_MODELS
+                selected_model = st.selectbox("Select a model", models, label_visibility="hidden",
                                               key="model1")
-                selected_model = MODELS_TITLE_MAP[selected_model]
+                selected_model = MODELS_TITLE_MAP.get(selected_model, selected_model)
 
 
             with sc2:

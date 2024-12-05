@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "aichatlite"
-version = "0.1.4"
+version = "0.1.5"
 description = "claude chat"
 authors = ["Kammari Santhosh"]
 readme = "README.md"
 license = "MIT License"
-repository = "https://github.com/username/sa"
+repository = "https://github.cov0m/username/sa"
 keywords = ["claude","claude_chat"]
 packages = [
     {include = "aichatlite"}

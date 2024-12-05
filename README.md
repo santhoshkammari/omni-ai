@@ -1,6 +1,113 @@
-# omni-ai
+# 🤖 omni-ai
 
-A chatbot system using huggingchat with most capable model qwen2.5-70B model , to achieve similar featurs of claude.
+Transform your AI interactions with omni-ai, an innovative open-source chatbot system that brings Claude-like capabilities to everyone using Hugging Face's most powerful open models. Built around the cutting-edge Qwen2.5-70B, our system delivers enterprise-grade conversational AI without the enterprise price tag.
+
+## 🌟 Why omni-ai?
+
+- 🧠 Powered by state-of-the-art Qwen2.5-70B model - the most capable open-source alternative to proprietary AI
+- 🎭 Implements Claude-inspired prompting techniques for human-like interactions
+- 🔗 Seamless integration with HuggingFace's ecosystem
+- 🎨 Beautiful artifact rendering similar to Claude's interface
+- 🌐 Built-in web search capabilities for real-time knowledge
+- 📚 Multiple specialist modes: Coding, Research, Analysis, and more
+- 💡 Smart context handling and conversation memory
+- 🚀 Fast response times with streaming output
+- 💰 completely FREE to use with open source models
+
+## 🎯 Perfect For:
+- 💻 Developers seeking a powerful coding assistant
+- 📊 Data scientists needing analysis help
+- 🔍 Researchers requiring smart search integration
+- 🎓 Students looking for learning support
+- 🏢 Teams wanting Claude-like features without the cost
+
+## ✨ Features
+
+- 🎯 Multiple AI models support
+- 💬 Interactive chat interface
+- 🔍 Web search integration
+- 📱 Clean and responsive UI
+- 🎨 Beautiful artifact rendering
+- 🤝 Multiple agent types for different use cases
+
+## 🚀 Installation
+
+```bash
+pip install aichatlite
+```
+
+## 📖 Quick Start
+
+Launch the UI with a single command:
+
+```bash
+claude
+```
+
+This will start the web interface on port 8501.
+
+## 🎮 Available Models
+
+| Model Type | Description |
+|------------|-------------|
+| 🖥️ Coding | Qwen2.5-Coder-32B-Instruct - Specialized for programming tasks |
+| 🌐 General | Qwen2.5-72B-Instruct - Best for general-purpose use |
+| 🔮 Preview | QwQ-32B-Preview - Latest experimental features |
+| 💭 Conversational | Hermes-3-Llama-3.1-8B - Optimized for natural dialogue |
+| 📱 Mini | Phi-3.5-mini-instruct - Lightweight model for basic tasks |
+
+## 🤝 Agent Types
+
+- QuestionAnswer: Direct response to queries
+- Reasoning: In-depth analytical responses
+- GoogleSearchAI: Web-enhanced responses
+- SearchAI: Alternative search implementation
+- GoogleSearch: Basic web search integration
+- DeepGoogleSearch: Advanced web research capabilities
+
+## 📸 UI Screenshots
+
+Here's how the interface looks in action:
+
+![Basic Chat Interface](figs/v0.1.3_chatlite.png)
+![Improved UI with Artifact](figs/render_with_artifact_improved_ui.png)
+
+## 🗺️ Roadmap
+
+- ✅ Feature 1: Integrate hugchat and launch UI
+- ✅ Feature 2: Web search integration (available in aichatlite-web-release branch)
+- 🔄 Feature 3: PDF Chat integration
+- 🔄 Feature 4: AI Researcher capabilities (arxiv, google scholar, etc.)
+
+## 💡 Advanced Usage
+
+### Selecting Models
+Choose from different models based on your needs:
+- Use Coding model for programming tasks
+- General model for everyday queries
+- Preview model for testing new features
+- Mini model for quick, simple responses
+
+### Agent Types
+Different agents for different tasks:
+- QuestionAnswer: Quick, direct responses
+- Reasoning: Detailed analytical answers
+- Various search options for web-enhanced responses
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+- Open issues for bugs or feature requests
+- Submit pull requests
+- Improve documentation
+- Share your use cases
+
+
+
+## Ui Progress
+
+
+![Chatbot Image](figs/v0.1.3_chatlite.png)
 
 ![Chatbot Image](figs/intial_render.png)
 
@@ -8,10 +115,6 @@ A chatbot system using huggingchat with most capable model qwen2.5-70B model , t
 
 ![Chatbot Image + Artifact After UI Improvement](figs/render_with_artifact_improved_ui.png)
 
+## 📝 License
 
-## Future Plan
-
-- [x] Feature 1: Integrate hugchat and start ui
-- [ ] Feature 2: Integrate websearch
-- [ ] Feature 3: PDF+Chat
-- [ ] Feature 4: Ai Researcher on specific topic or request ( arxiv,google etc..)
+[Add your license information here]

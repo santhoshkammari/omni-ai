@@ -194,14 +194,14 @@ class OmniAIChatApp(OmniMixin):
                 current_chat["messages"].append({"role": "user", "content": query})
 
             self.process_ai_response(query,web_search = st.session_state.web_search,
-                                     system_prompt = st.session_state.current_prompt)
-            self.process_ai_response(query,web_search = st.session_state.web_search,
+                                     system_prompt=st.session_state.current_prompt,
                                      agent_type = st.session_state.agent_type)
 
-    def process_ai_response(self, query: str, web_search=False,system_prompt=""):
+    def process_ai_response(self, query: str, web_search=False,
+                            agent_type =None,
+                            system_prompt=""):
         system_prompt = self.add_time_and_artifact_to_system_prompt(system_prompt=system_prompt)
-    def process_ai_response(self, query: str,web_search=False,
-                            agent_type =None):
+
         chat_placeholder = st.empty()
         artifact_placeholder = self.artifact_col.empty()
 
@@ -209,10 +209,9 @@ class OmniAIChatApp(OmniMixin):
             chatbot=st.session_state.chatbot,
             agent_type=agent_type,
             query=query,
-            web_search=web_search
+            web_search=web_search,
+            system_prompt=system_prompt
         )
-        response_generator = self.get_chat_response(st.session_state.chatbot, st.session_state.agent_type,query,web_search=web_search,
-                                                    system_prompt=system_prompt)
         # Initialize chunk counting and timing
         start_time = time.time()
         chunk_count = 0

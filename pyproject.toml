@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "aichatlite-web"
-version = "0.0.6"
+name = "aichatlite"
+version = "0.1.4"
 description = "claude chat"
 authors = ["Kammari Santhosh"]
 readme = "README.md"
@@ -19,10 +19,9 @@ include = [
 python = "^3.10"
 streamlit="^1.40.2"
 ailitellm="^0.1.3"
-visionlite="^0.1.0"
 
 [tool.poetry.scripts]
-claude-web = "chat_gui:run_app"
+claude = "chat_gui:run_app"
 
 [build-system]
 requires = ["poetry-core"]

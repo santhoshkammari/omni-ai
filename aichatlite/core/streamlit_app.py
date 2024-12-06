@@ -29,24 +29,24 @@ class OmniAIChatApp(OmniMixin):
         self.elapsed_time = 0
 
     def initialize_session_state(self):
-        if "chats" not in st.session_state:
-            st.session_state.chats = {}
-        if "current_chat_id" not in st.session_state:
-            st.session_state.current_chat_id = None
-        if "chatbot" not in st.session_state:
-            st.session_state.chatbot = None
-        if "selected_model" not in st.session_state:
-            st.session_state.selected_model = None
-        if "sidebar_state" not in st.session_state:
-            st.session_state.sidebar_state = "expanded"
-        if "uploaded_file" not in st.session_state:
-            st.session_state.uploaded_file = None
-        if "agent_type" not in st.session_state:
-            st.session_state.agent_type = self.AGENT_TYPES[0]
-        if "web_search" not in st.session_state:
-            st.session_state.web_search = False
-        if "current_prompt" not in st.session_state:
-            st.session_state.current_prompt = getattr(aipromptlite, "AILITE_X_CLAUDE_PROMPT")
+        default_states = {
+            "chats": {},
+            "current_chat_id": None,
+            "chatbot": None,
+            "selected_model": self.AVAILABLE_MODELS[0],  # Set default model
+            "sidebar_state": "expanded",
+            "uploaded_file": None,
+            "agent_type": self.AGENT_TYPES[0],
+            "web_search": False,
+            "current_prompt": "",
+            "query": None,
+            "chat_history": [],  # Add this for better history management
+            "model_cache": {},  # Add this for model caching
+        }
+
+        for key, default_value in default_states.items():
+            if key not in st.session_state:
+                st.session_state[key] = default_value
 
 
     def render_sidebar(self):
@@ -82,16 +82,18 @@ class OmniAIChatApp(OmniMixin):
             self.artifact_col = col2.container(height=ARTIFACT_COLUMN_HEIGHT,border=True)
 
             with self.chat_col:
+                self.display_chat_messages()
                 self.handle_user_input()
-                # self.display_chat_messages()
 
     def display_chat_messages(self):
-        if st.session_state.current_chat_id:
-            for message in reversed(st.session_state.chats[st.session_state.current_chat_id]["messages"]):
-                with st.chat_message(message["role"]):
-                    if message["role"] == "user" and "file" in message:
-                        st.write(f"Attached file: {message['file']}")
-                    st.write(message["content"])
+        self.chat_message_col = st.container(height=400)
+
+        # if st.session_state.current_chat_id:
+        #     for message in reversed(st.session_state.chats[st.session_state.current_chat_id]["messages"]):
+        #         with st.chat_message(message["role"]):
+        #             if message["role"] == "user" and "file" in message:
+        #                 st.write(f"Attached file: {message['file']}")
+        #             st.write(message["content"])
 
     def update_metrics(self):
         self.metrics_container.button(
@@ -101,8 +103,9 @@ class OmniAIChatApp(OmniMixin):
         )
 
     def handle_selection_container(self):
-        sc1, sc2, sc3, sc4, sc5 = st.columns([15, 15, 15, 15, 35], gap='small')
-        with sc1.popover('Model'):
+        sc1, sc2, sc3, sc4,sc5 = st.columns([1,1,1,1,1], gap='small')
+        with sc1.popover('Model',icon=":material/model_training:"):
+            st.success('Available Models')
             models = list(MODELS_TITLE_MAP.keys()) + AVAILABLE_MODELS
             selected_model = st.radio(
                 "Available Models",
@@ -112,27 +115,42 @@ class OmniAIChatApp(OmniMixin):
             if selected_model not in AVAILABLE_MODELS:
                 selected_model = MODELS_TITLE_MAP.get(selected_model, AVAILABLE_MODELS[0])
 
-        with sc2.popover('Type'):
-            agent_type = st.radio("Agent type", self.AGENT_TYPES,
+        with sc2.popover('Type',icon=":material/tune:"):
+            st.success('TaskType')
+            agent_type = st.radio("TaskType", self.AGENT_TYPES,
                                   label_visibility="hidden",
                                   key="agent_type",
                                   )
             if st.session_state.agent_type is None or st.session_state.agent_type != agent_type:
                 st.session_state.agent_type = agent_type
 
-        with sc4.popover("", icon="🔗"):
-            st.session_state.uploaded_file = st.file_uploader('uploaded_file', label_visibility='hidden',
-                                                              accept_multiple_files=True)
-            st.success(f"File {st.session_state.uploaded_file} uploaded successfully!")
 
-        with sc3.popover("Style"):
-            prompt_name = st.radio("Select a model",
+
+        with sc3.popover("Style",icon=":material/palette:"):
+            st.success('Model Prompts')
+            prompt_name = st.radio("Model Prompts",
                                    get_available_prompts(),
                                    label_visibility="hidden",
                                    key="prompt_name"
                                    )
             if prompt_name != 'DEFAULT_PROMPT':
                 st.session_state.current_prompt = getattr(aipromptlite, prompt_name)
+
+        with sc4.popover("Tools",icon=":material/build_circle:"):
+            st.subheader("Tools")
+            st.button("Clear Chat History", key="clear_chat_history")
+            st.button("Restart Chatbot", key="restart_chatbot")
+            st.button("Reset Settings", key="reset_settings")
+
+            st.button("Save Chat", key="save_chat")
+            st.button("Load Chat", key="load_chat")
+            st.toggle("WebSearch")
+
+        with sc5.popover("exp",icon=":material/experiment:"):
+            st.subheader("Advanced Settings")
+            st.button("Save Settings", key="save_settings")
+
+
 
         return selected_model
 
@@ -151,64 +169,128 @@ class OmniAIChatApp(OmniMixin):
 
                 with col1:
                     if query := st.chat_input(placeholder="How can Claude help you today?"):
-                        query+=""
+                        st.session_state.query = query
 
-                with col2:
-                    self.metrics_container = st.empty()
-                    self.update_metrics()
+                with col2.popover("",icon=":material/attach_file_add:"):
+                    st.session_state.uploaded_file = st.file_uploader('uploaded_file', label_visibility='hidden',
+                                                                      accept_multiple_files=True,
+                                                                      key="file_uploader_key"
+                                                                      )
+                    # self.metrics_container = st.empty()
+                    # self.update_metrics()
 
 
 
             with selection_container:
                 selected_model = self.handle_selection_container()
 
-            if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
-                system_prompt = self.get_system_prompt(st.session_state.agent_type)
-                chatbot_instance = self.create_chat_instance(selected_model,system_prompt)
-                # chatbot_instance.chatbot.new_conversation(
-                #     modelIndex=self.AVAILABLE_MODELS.index(selected_model),
-                #     system_prompt=system_prompt,
-                #     switch_to=True)
-                st.session_state.chatbot = chatbot_instance
-                st.session_state.selected_model = selected_model
+                if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
+                    system_prompt = self.get_system_prompt(st.session_state.agent_type)
+                    chatbot_instance = self.create_chat_instance(selected_model,system_prompt)
+                    # chatbot_instance.chatbot.new_conversation(
+                    #     modelIndex=self.AVAILABLE_MODELS.index(selected_model),
+                    #     system_prompt=system_prompt,
+                    #     switch_to=True)
+                    st.session_state.chatbot = chatbot_instance
+                    st.session_state.selected_model = selected_model
 
 
+            if query:
+                system_prompt = self.add_time_and_artifact_to_system_prompt(system_prompt=st.session_state.current_prompt)
+                self.artifact_placeholder = self.artifact_col.empty()
+                self.chat_placeholder = self.chat_message_col.empty()
+                response_generator = self.get_chat_response(st.session_state.chatbot,
+                                                            st.session_state.agent_type,
+                                                            st.session_state.query,
+                                                            web_search=st.session_state.web_search,
+                                                            system_prompt=system_prompt)
 
-            if query or st.session_state.uploaded_file:
-                print(f'file name: {st.session_state.uploaded_file}')
-                if not st.session_state.current_chat_id:
-                    self.create_new_chat()
+                generation_flag = True
+                code_text = ""
+                TRASH = [
+    "<artifact_area>",
+    "artifact<",
+    "```python",
+    "##/normal_content>",
+    "##normal_content>",
+    "artifact_area>",
+    "artifactarea>",
+    "artifactive>",
+    "```",
+    "<code_or_keypoints>",
+    "<code_or",
+    "code_or",
+    "_keypoints>",
+                    "_area>",
+    "python",
+            "```"
+]
 
-                current_chat = st.session_state.chats[st.session_state.current_chat_id]
 
-                if st.session_state.uploaded_file:
-                    file_data = []
-                    for f in st.session_state.uploaded_file:
-                        file_data.append({
-                            "bytes": f.read(),
-                            "name": f.name,
-                            "extension": f.name.lower().split('.')[-1]
-                        })
+                def middleware(gen):
+                    text = ""
+                    for i,v in enumerate(response_generator):
+                        if v is None:
+                            global generation_flag
+                            generation_flag = False
+                        if v is not None:
+                            text += v
 
-                    print(file_data[0]['name'])
+                        if v in TRASH:
+                            continue
+                        if 'artifact' in text:
+                            return
+                        yield v
 
+                def code(gen,code_text):
+                    for x in gen:
+                        if x:
+                            code_text += x
+                            code_text = code_text.replace("_area>","")
+                            code_text = code_text.replace("</","")
+                            self.artifact_placeholder.code(code_text)
 
-                    # if file_extension in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']:
-                    #     with st.spinner("Analyzing pdf ..."):
-                    #         query = self.handle_files(query,file_content,file_extension)
+                while generation_flag:
+                    self.chat_placeholder.write_stream(middleware(response_generator))
+                    code(middleware(response_generator),code_text)
+                    # self.artifact_placeholder.write_stream(middleware(response_generator))
 
-                    current_chat["messages"].append({
-                        "role": "user",
-                        "content": f"Uploaded file:",
-                        "file": ""
-                    })
-                    st.session_state.uploaded_file = None
-
-                if query:
-                    current_chat["messages"].append({"role": "user", "content": query})
-
-                self.process_ai_response(query,web_search = st.session_state.web_search,
-                                         system_prompt = st.session_state.current_prompt)
+            #
+            # if query or st.session_state.uploaded_file:
+            #     print(f'file name: {st.session_state.uploaded_file}')
+            #     if not st.session_state.current_chat_id:
+            #         self.create_new_chat()
+            #
+            #     current_chat = st.session_state.chats[st.session_state.current_chat_id]
+            #
+            #     if st.session_state.uploaded_file:
+            #         file_data = []
+            #         for f in st.session_state.uploaded_file:
+            #             file_data.append({
+            #                 "bytes": f.read(),
+            #                 "name": f.name,
+            #                 "extension": f.name.lower().split('.')[-1]
+            #             })
+            #
+            #         print(file_data[0]['name'])
+            #
+            #
+            #         # if file_extension in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']:
+            #         #     with st.spinner("Analyzing pdf ..."):
+            #         #         query = self.handle_files(query,file_content,file_extension)
+            #
+            #         current_chat["messages"].append({
+            #             "role": "user",
+            #             "content": f"Uploaded file:",
+            #             "file": ""
+            #         })
+            #         st.session_state.uploaded_file = None
+            #
+            #     if query:
+            #         current_chat["messages"].append({"role": "user", "content": query})
+            #
+            #     self.process_ai_response(query,web_search = st.session_state.web_search,
+            #                              system_prompt = st.session_state.current_prompt)
 
     def process_ai_response(self, query: str, web_search=False,system_prompt=""):
         system_prompt = self.add_time_and_artifact_to_system_prompt(system_prompt=system_prompt)

@@ -40,8 +40,8 @@ AVAILABLE_MODELS:List[str] = [
 ]
 
 MODELS_TITLE_MAP: Dict[str, str] = {
-    "Coding": "Qwen/Qwen2.5-Coder-32B-Instruct",
     "General": "Qwen/Qwen2.5-72B-Instruct",
+    "Coding": "Qwen/Qwen2.5-Coder-32B-Instruct",
     "Preview": "Qwen/QwQ-32B-Preview",
     "Conversational": "NousResearch/Hermes-3-Llama-3.1-8B",
     "Mini": "microsoft/Phi-3.5-mini-instruct"

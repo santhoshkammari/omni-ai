@@ -12,7 +12,7 @@ AVAILABLE_MODELS:List[str] = [
     "Qwen/QwQ-32B-Preview",
     "Qwen/Qwen2.5-Coder-32B-Instruct",
     "NousResearch/Hermes-3-Llama-3.1-8B",
-    "microsoft/Phi-3.5-mini-instruct"
+    "microsoft/Phi-3.5-mini-instruct",
     "meta-llama/Llama-3.1-8B-Instruct",
     "meta-llama/Llama-3.2-1B-Instruct",
     "meta-llama/Llama-3.2-3B-Instruct",

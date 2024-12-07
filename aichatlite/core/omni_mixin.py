@@ -1,7 +1,7 @@
 from .base import st, OmniCore
-from typing import List, Tuple, Generator
+from typing import Tuple, Generator
 
-from .const import WORD_LLAMA_DIM
+from aichatlite.core.utils.const import WORD_LLAMA_DIM
 # from .features import PdfHandler
 from .features.feature_main import FeatureHandlerMain
 

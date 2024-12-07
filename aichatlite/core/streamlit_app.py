@@ -1,14 +1,15 @@
-import time
-import uuid
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import List, Optional, Dict
 
 import aipromptlite
-from spacy.symbols import agent
 
 from .base import st
 from datetime import datetime
 
 from .baseprompt import BasePrompt
-from .const import *
+from .utils import const
 from .omni_mixin import OmniMixin
 from .prompts import Prompts
 from .streamlit_css import OmniAiChatCSS
@@ -16,27 +17,25 @@ from ..utils.prompt_names_fetcher import get_available_prompts
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
-
-class OmniAIChatApp(OmniMixin):
-    AVAILABLE_MODELS: List[str] = AVAILABLE_MODELS
-    AGENT_TYPES: List[str] = AGENT_TYPES
-
-    def __init__(self):
-        self.sidebar = st.sidebar
-        self.main_area = st.container()
-        self.initialize_session_state()
-        self.chunks_per_second = 0
-        self.elapsed_time = 0
-
-    def initialize_session_state(self):
-        default_states = {
+@dataclass
+class AppConfig:
+    AVAILABLE_MODELS: List[str] = field(default_factory=lambda :const.AVAILABLE_MODELS)
+    AGENT_TYPES: List[str] = field(default_factory=lambda :const.AGENT_TYPES)
+    BASE_PROMPT: BasePrompt = BasePrompt()
+    AVAILABLE_PROMPTS: List[str] = field(default_factory=get_available_prompts)
+    MODELS_TITLE_MAP: Dict[str, str] = field(default_factory=lambda :const.MODELS_TITLE_MAP)
+    ARTIFACT_COLUMN_HEIGHT: int = const.ARTIFACT_COLUMN_HEIGHT
+    ENABLE_EXPERIMENTAL: bool = False
+    CHAT_HISTORY_LIMIT: int = 100
+    def __post_init__(self):
+        self.DEFAULT_STATES = {
             "chats": {},
             "current_chat_id": None,
             "chatbot": None,
-            "selected_model": self.AVAILABLE_MODELS[0],  # Set default model
+            "selected_model": const.AVAILABLE_MODELS[0],  # Set default model
             "sidebar_state": "expanded",
             "uploaded_file": None,
-            "agent_type": self.AGENT_TYPES[0],
+            "agent_type": const.AGENT_TYPES[0],
             "web_search": False,
             "current_prompt": "",
             "query": None,
@@ -44,22 +43,43 @@ class OmniAIChatApp(OmniMixin):
             "model_cache": {},  # Add this for model caching
         }
 
-        for key, default_value in default_states.items():
+
+    @classmethod
+    def load_from_file(cls, config_path:Path):
+        if config_path.exists():
+            with config_path.open() as f:
+                config_data = json.load(f)
+                return cls(**config_data)
+        return cls()
+
+    @staticmethod
+    def get_default_config() -> 'AppConfig':
+        return AppConfig()
+
+
+class OmniAIChatApp(OmniMixin):
+
+    def __init__(self,config_path:Optional[Path]=None):
+        self.config = AppConfig.load_from_file(config_path) if config_path else AppConfig.get_default_config()
+        self.sidebar = st.sidebar
+        self.main_area = st.container()
+        self.initialize_session_state()
+
+    def initialize_session_state(self):
+        for key, default_value in self.config.DEFAULT_STATES.items():
             if key not in st.session_state:
                 st.session_state[key] = default_value
 
 
     def render_sidebar(self):
         st.sidebar.title("Chat History")
-        if st.sidebar.button("New Chat"):
-            self.create_new_chat()
 
         for chat_id, chat_info in st.session_state.chats.items():
             if st.sidebar.button(f"{chat_info['name']} - {chat_info['timestamp'][:10]}"):
                 st.session_state.current_chat_id = chat_id
 
         st.sidebar.write("Model Information")
-        for k,v in MODELS_TITLE_MAP.items():
+        for k,v in self.config.MODELS_TITLE_MAP.items():
             st.sidebar.write(f'{k} - {v}')
 
     def create_new_chat(self):
@@ -79,7 +99,7 @@ class OmniAIChatApp(OmniMixin):
             col1, col2 = st.columns([53,47],gap='small')
 
             self.chat_col = col1
-            self.artifact_col = col2.container(height=ARTIFACT_COLUMN_HEIGHT,border=True)
+            self.artifact_col = col2.container(height=self.config.ARTIFACT_COLUMN_HEIGHT,border=True)
 
             with self.chat_col:
                 self.display_chat_messages()
@@ -88,36 +108,23 @@ class OmniAIChatApp(OmniMixin):
     def display_chat_messages(self):
         self.chat_message_col = st.container(height=400)
 
-        # if st.session_state.current_chat_id:
-        #     for message in reversed(st.session_state.chats[st.session_state.current_chat_id]["messages"]):
-        #         with st.chat_message(message["role"]):
-        #             if message["role"] == "user" and "file" in message:
-        #                 st.write(f"Attached file: {message['file']}")
-        #             st.write(message["content"])
-
-    def update_metrics(self):
-        self.metrics_container.button(
-            label=f"{self.chunks_per_second}/s, {self.elapsed_time}s",
-            key="metrics_button_{}".format(datetime.now().timestamp()),
-            disabled=True
-        )
 
     def handle_selection_container(self):
         sc1, sc2, sc3, sc4,sc5 = st.columns([1,1,1,1,1], gap='small')
         with sc1.popover('Model',icon=":material/model_training:"):
             st.success('Available Models')
-            models = list(MODELS_TITLE_MAP.keys()) + AVAILABLE_MODELS
+            models = list(self.config.MODELS_TITLE_MAP.keys()) + self.config.AVAILABLE_MODELS
             selected_model = st.radio(
                 "Available Models",
                 label_visibility='hidden',
                 options=models
             )
-            if selected_model not in AVAILABLE_MODELS:
-                selected_model = MODELS_TITLE_MAP.get(selected_model, AVAILABLE_MODELS[0])
+            if selected_model not in self.config.AVAILABLE_MODELS:
+                selected_model = self.config.MODELS_TITLE_MAP.get(selected_model, self.config.AVAILABLE_MODELS[0])
 
         with sc2.popover('Type',icon=":material/tune:"):
             st.success('TaskType')
-            agent_type = st.radio("TaskType", self.AGENT_TYPES,
+            agent_type = st.radio("TaskType", self.config.AGENT_TYPES,
                                   label_visibility="hidden",
                                   key="agent_type",
                                   )

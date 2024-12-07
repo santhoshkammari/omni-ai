@@ -56,11 +56,27 @@ class AppConfig:
     def get_default_config() -> 'AppConfig':
         return AppConfig()
 
+class ModernUITheme:
+    @staticmethod
+    def apply_dark_mode() -> None:
+        st.markdown("""
+            <style>
+            .stApp {
+                background-color: #1E1E1E;
+                color: #FFFFFF;
+            }
+            .stButton>button {
+                background-color: #2E2E2E;
+                color: #FFFFFF;
+            }
+            </style>
+            """, unsafe_allow_html=True)
 
 class OmniAIChatApp(OmniMixin):
 
     def __init__(self,config_path:Optional[Path]=None):
         self.config = AppConfig.load_from_file(config_path) if config_path else AppConfig.get_default_config()
+        self.theme = ModernUITheme()
         self.sidebar = st.sidebar
         self.main_area = st.container()
         self.initialize_session_state()
@@ -198,89 +214,7 @@ class OmniAIChatApp(OmniMixin):
                     st.session_state.selected_model = selected_model
 
             if query:
-                system_prompt = self.add_time_and_artifact_to_system_prompt(
-                    system_prompt=st.session_state.current_prompt)
-                self.artifact_placeholder = self.artifact_col.empty()
-                self.chat_placeholder = self.chat_message_col.empty()
-                response_generator = self.get_chat_response(st.session_state.chatbot,
-                                                            st.session_state.agent_type,
-                                                            st.session_state.query,
-                                                            web_search=st.session_state.web_search,
-                                                            system_prompt=system_prompt)
-
-                # Initialize accumulators
-                chat_content = ""
-                artifact_content = ""
-                current_mode = "chat"  # Start in chat mode
-                generation_flag = True
-
-                TRASH_TAGS = [
-                    "<artifact_area>",
-                    "artifact<",
-                    "```python",
-                    "##/normal_content>",
-                    "##normal_content>",
-                    "artifact_area>",
-                    "artifactarea>",
-                    "artifactive>",
-                    "```",
-                    "<code_or_keypoints>",
-                    "<code_or",
-                    "code_or",
-                    "_keypoints>",
-                    "_area>",
-                    "python",
-                    "```",
-                    "</",
-                    "<"
-                ]
-
-                def is_artifact_tag(text):
-                    return "artifact" in text
-
-                def clean_text(text):
-                    for tag in TRASH_TAGS:
-                        text = text.replace(tag, "")
-                    return text
-
-                def process_stream():
-                    nonlocal chat_content, artifact_content, current_mode, generation_flag
-
-                    for chunk in response_generator:
-                        if chunk is None:
-                            generation_flag = False
-                            continue
-
-                        # Check for mode switches
-                        if is_artifact_tag(chunk):
-                            if current_mode == "chat":
-                                current_mode = "artifact"
-                            else:
-                                current_mode = "chat"
-                            continue
-
-                        # Clean the chunk
-                        cleaned_chunk = clean_text(chunk)
-
-                        # Append to appropriate content
-                        if current_mode == "chat":
-                            chat_content += cleaned_chunk
-                            chat_content = clean_text(chat_content)
-                            self.chat_placeholder.markdown(chat_content)
-                        else:
-                            artifact_content += cleaned_chunk
-                            artifact_content = clean_text(artifact_content)
-                            self.artifact_placeholder.code(artifact_content)
-
-                # Process the stream until complete
-                while generation_flag:
-                    process_stream()
-
-                # Final render of both areas
-                if chat_content:
-                    self.chat_placeholder.markdown(chat_content)
-                if artifact_content:
-                    self.artifact_placeholder.code(artifact_content)
+                self.start_action()
 
     def run(self):
         self.render_sidebar()
@@ -294,3 +228,88 @@ class OmniAIChatApp(OmniMixin):
 
     def add_time_and_artifact_to_system_prompt(self, system_prompt):
         return BasePrompt.TODAY_DATE + system_prompt + "\n" + BasePrompt.ARTIFACT
+
+    def start_action(self):
+        system_prompt = self.add_time_and_artifact_to_system_prompt(
+            system_prompt=st.session_state.current_prompt)
+        self.artifact_placeholder = self.artifact_col.empty()
+        self.chat_placeholder = self.chat_message_col.empty()
+        response_generator = self.get_chat_response(st.session_state.chatbot,
+                                                    st.session_state.agent_type,
+                                                    st.session_state.query,
+                                                    web_search=st.session_state.web_search,
+                                                    system_prompt=system_prompt)
+
+        # Initialize accumulators
+        chat_content = ""
+        artifact_content = ""
+        current_mode = "chat"  # Start in chat mode
+        generation_flag = True
+
+        TRASH_TAGS = [
+            "<artifact_area>",
+            "artifact<",
+            "```python",
+            "##/normal_content>",
+            "##normal_content>",
+            "artifact_area>",
+            "artifactarea>",
+            "artifactive>",
+            "```",
+            "<code_or_keypoints>",
+            "<code_or",
+            "code_or",
+            "_keypoints>",
+            "_area>",
+            "python",
+            "```",
+            "</",
+            "<"
+        ]
+
+        def is_artifact_tag(text):
+            return "artifact" in text
+
+        def clean_text(text):
+            for tag in TRASH_TAGS:
+                text = text.replace(tag, "")
+            return text
+
+        def process_stream():
+            nonlocal chat_content, artifact_content, current_mode, generation_flag
+
+            for chunk in response_generator:
+                if chunk is None:
+                    generation_flag = False
+                    continue
+
+                # Check for mode switches
+                if is_artifact_tag(chunk):
+                    if current_mode == "chat":
+                        current_mode = "artifact"
+                    else:
+                        current_mode = "chat"
+                    continue
+
+                # Clean the chunk
+                cleaned_chunk = clean_text(chunk)
+
+                # Append to appropriate content
+                if current_mode == "chat":
+                    chat_content += cleaned_chunk
+                    chat_content = clean_text(chat_content)
+                    self.chat_placeholder.markdown(chat_content)
+                else:
+                    artifact_content += cleaned_chunk
+                    artifact_content = clean_text(artifact_content)
+                    self.artifact_placeholder.code(artifact_content)
+
+        # Process the stream until complete
+        while generation_flag:
+            process_stream()
+
+        # Final render of both areas
+        if chat_content:
+            self.chat_placeholder.markdown(chat_content)
+        if artifact_content:
+            self.artifact_placeholder.code(artifact_content)

@@ -176,10 +176,6 @@ class OmniAIChatApp(OmniMixin):
                                                                       accept_multiple_files=True,
                                                                       key="file_uploader_key"
                                                                       )
-                    # self.metrics_container = st.empty()
-                    # self.update_metrics()
-
-
 
             with selection_container:
                 selected_model = self.handle_selection_container()
@@ -194,9 +190,9 @@ class OmniAIChatApp(OmniMixin):
                     st.session_state.chatbot = chatbot_instance
                     st.session_state.selected_model = selected_model
 
-
             if query:
-                system_prompt = self.add_time_and_artifact_to_system_prompt(system_prompt=st.session_state.current_prompt)
+                system_prompt = self.add_time_and_artifact_to_system_prompt(
+                    system_prompt=st.session_state.current_prompt)
                 self.artifact_placeholder = self.artifact_col.empty()
                 self.chat_placeholder = self.chat_message_col.empty()
                 response_generator = self.get_chat_response(st.session_state.chatbot,
@@ -205,137 +201,79 @@ class OmniAIChatApp(OmniMixin):
                                                             web_search=st.session_state.web_search,
                                                             system_prompt=system_prompt)
 
+                # Initialize accumulators
+                chat_content = ""
+                artifact_content = ""
+                current_mode = "chat"  # Start in chat mode
                 generation_flag = True
-                code_text = ""
-                TRASH = [
-    "<artifact_area>",
-    "artifact<",
-    "```python",
-    "##/normal_content>",
-    "##normal_content>",
-    "artifact_area>",
-    "artifactarea>",
-    "artifactive>",
-    "```",
-    "<code_or_keypoints>",
-    "<code_or",
-    "code_or",
-    "_keypoints>",
+
+                TRASH_TAGS = [
+                    "<artifact_area>",
+                    "artifact<",
+                    "```python",
+                    "##/normal_content>",
+                    "##normal_content>",
+                    "artifact_area>",
+                    "artifactarea>",
+                    "artifactive>",
+                    "```",
+                    "<code_or_keypoints>",
+                    "<code_or",
+                    "code_or",
+                    "_keypoints>",
                     "_area>",
-    "python",
-            "```"
-]
+                    "python",
+                    "```",
+                    "</",
+                    "<"
+                ]
 
+                def is_artifact_tag(text):
+                    return "artifact" in text
 
-                def middleware(gen):
-                    text = ""
-                    for i,v in enumerate(response_generator):
-                        if v is None:
-                            global generation_flag
+                def clean_text(text):
+                    for tag in TRASH_TAGS:
+                        text = text.replace(tag, "")
+                    return text
+
+                def process_stream():
+                    nonlocal chat_content, artifact_content, current_mode, generation_flag
+
+                    for chunk in response_generator:
+                        if chunk is None:
                             generation_flag = False
-                        if v is not None:
-                            text += v
-
-                        if v in TRASH:
                             continue
-                        if 'artifact' in text:
-                            return
-                        yield v
 
-                def code(gen,code_text):
-                    for x in gen:
-                        if x:
-                            code_text += x
-                            code_text = code_text.replace("_area>","")
-                            code_text = code_text.replace("</","")
-                            self.artifact_placeholder.code(code_text)
+                        # Check for mode switches
+                        if is_artifact_tag(chunk):
+                            if current_mode == "chat":
+                                current_mode = "artifact"
+                            else:
+                                current_mode = "chat"
+                            continue
 
+                        # Clean the chunk
+                        cleaned_chunk = clean_text(chunk)
+
+                        # Append to appropriate content
+                        if current_mode == "chat":
+                            chat_content += cleaned_chunk
+                            chat_content = clean_text(chat_content)
+                            self.chat_placeholder.markdown(chat_content)
+                        else:
+                            artifact_content += cleaned_chunk
+                            artifact_content = clean_text(artifact_content)
+                            self.artifact_placeholder.code(artifact_content)
+
+                # Process the stream until complete
                 while generation_flag:
-                    self.chat_placeholder.write_stream(middleware(response_generator))
-                    code(middleware(response_generator),code_text)
-                    # self.artifact_placeholder.write_stream(middleware(response_generator))
+                    process_stream()
 
-            #
-            # if query or st.session_state.uploaded_file:
-            #     print(f'file name: {st.session_state.uploaded_file}')
-            #     if not st.session_state.current_chat_id:
-            #         self.create_new_chat()
-            #
-            #     current_chat = st.session_state.chats[st.session_state.current_chat_id]
-            #
-            #     if st.session_state.uploaded_file:
-            #         file_data = []
-            #         for f in st.session_state.uploaded_file:
-            #             file_data.append({
-            #                 "bytes": f.read(),
-            #                 "name": f.name,
-            #                 "extension": f.name.lower().split('.')[-1]
-            #             })
-            #
-            #         print(file_data[0]['name'])
-            #
-            #
-            #         # if file_extension in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']:
-            #         #     with st.spinner("Analyzing pdf ..."):
-            #         #         query = self.handle_files(query,file_content,file_extension)
-            #
-            #         current_chat["messages"].append({
-            #             "role": "user",
-            #             "content": f"Uploaded file:",
-            #             "file": ""
-            #         })
-            #         st.session_state.uploaded_file = None
-            #
-            #     if query:
-            #         current_chat["messages"].append({"role": "user", "content": query})
-            #
-            #     self.process_ai_response(query,web_search = st.session_state.web_search,
-            #                              system_prompt = st.session_state.current_prompt)
-
-    def process_ai_response(self, query: str, web_search=False,system_prompt=""):
-        system_prompt = self.add_time_and_artifact_to_system_prompt(system_prompt=system_prompt)
-        chat_placeholder = st.empty()
-        artifact_placeholder = self.artifact_col.empty()
-
-        response_generator = self.get_chat_response(st.session_state.chatbot, st.session_state.agent_type,query,web_search=web_search,
-                                                    system_prompt=system_prompt)
-
-        # chat_placeholder.write_stream(response_generator)
-        # Initialize chunk counting and timing
-        start_time = time.time()
-        chunk_count = 0
-
-        def chunk_counting_stream(generator):
-            nonlocal chunk_count
-            for chunk, flag in self.data_stream(generator):
-                chunk_count += 1
-                yield chunk, flag
-
-        chat_content, artifact_content = self.update_chat_col(
-            chunk_counting_stream(response_generator),
-            chat_placeholder,
-            artifact_placeholder,
-            self.chat_holder
-        )
-
-        # Calculate chunks per second
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        chunks_per_second = chunk_count / elapsed_time if elapsed_time > 0 else 0
-
-        # Display chunks per second
-        self.chunks_per_second = int(chunks_per_second)
-        self.elapsed_time = int(elapsed_time)
-        self.total_tokens = chunk_count
-        st.sidebar.text(f"Tokens/s : {self.chunks_per_second}")
-        st.sidebar.text(f"Inference: {int(elapsed_time)}s")
-        st.sidebar.text(f"Total tokens: {chunk_count}")
-        self.update_metrics()
-
-        current_chat = st.session_state.chats[st.session_state.current_chat_id]
-        current_chat["messages"].append({"role": "assistant", "content": chat_content})
-        if artifact_content:
-            current_chat["messages"].append({"role": "artifact", "content": artifact_content})
+                # Final render of both areas
+                if chat_content:
+                    self.chat_placeholder.markdown(chat_content)
+                if artifact_content:
+                    self.artifact_placeholder.code(artifact_content)
 
     def run(self):
         self.render_sidebar()

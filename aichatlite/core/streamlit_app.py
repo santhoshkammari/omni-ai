@@ -40,7 +40,7 @@ class AppConfig:
             "uploaded_file": None,
             "agent_type": const.AGENT_TYPES[0],
             "web_search": False,
-            "current_prompt": "",
+            "current_prompt": getattr(aipromptlite, "CLAUDE_SYS_PROMPT"),
             "query": None,
             "messages": [],  # Add this for better history management
             "model_cache": {},  # Add this for model caching
@@ -324,7 +324,7 @@ class OmniAIChatApp(OmniMixin):
                                    key="prompt_name"
                                    )
 
-            if prompt_name != 'DEFAULT_PROMPT':
+            if prompt_name != 'CLAUDE_SYS_PROMPT':
                 st.session_state.current_prompt = getattr(aipromptlite, prompt_name)
 
             custom_prompt = st.text_area('System Prompt',

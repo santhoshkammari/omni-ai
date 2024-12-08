@@ -21,12 +21,15 @@ st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 class AppConfig:
     AVAILABLE_MODELS: List[str] = field(default_factory=lambda :const.AVAILABLE_MODELS)
     AGENT_TYPES: List[str] = field(default_factory=lambda :const.AGENT_TYPES)
+    AGENTS: List[str] = field(default_factory=lambda :const.AGENTS)
     BASE_PROMPT: BasePrompt = BasePrompt()
     AVAILABLE_PROMPTS: List[str] = field(default_factory=get_available_prompts)
     MODELS_TITLE_MAP: Dict[str, str] = field(default_factory=lambda :const.MODELS_TITLE_MAP)
     ARTIFACT_COLUMN_HEIGHT: int = const.ARTIFACT_COLUMN_HEIGHT
     ENABLE_EXPERIMENTAL: bool = False
     CHAT_HISTORY_LIMIT: int = 100
+
+
     def __post_init__(self):
         self.DEFAULT_STATES = {
             "chats": {},
@@ -332,14 +335,17 @@ class OmniAIChatApp(OmniMixin):
                 st.session_state.current_prompt = custom_prompt
 
         with sc4.popover("Tools",icon=":material/build_circle:"):
-            st.subheader("Tools")
-            st.button("Clear Chat History", key="clear_chat_history")
-            st.button("Restart Chatbot", key="restart_chatbot")
-            st.button("Reset Settings", key="reset_settings")
-
-            st.button("Save Chat", key="save_chat")
-            st.button("Load Chat", key="load_chat")
+            st.subheader("Tools & Agents")
             st.toggle("WebSearch")
+            st.toggle("Code Interpreter")
+
+            with st.expander("Agents"):
+                agents = self.config.AGENTS
+                selected_agent = st.radio(
+                    "Available Agents",
+                    label_visibility='hidden',
+                    options=agents
+                )
 
         with sc5.popover("exp",icon=":material/experiment:"):
             st.subheader("Advanced Settings")

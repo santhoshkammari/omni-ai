@@ -55,6 +55,12 @@ AGENT_TYPES:List[str] = [
     "IntelligentSearchAI"
     ]
 
+AGENTS:List[str] = [
+    "ArxivPaperAgent",
+    "WebExplorerAgent",
+    "MultiThoughtAgent"
+]
+
 
 
 ## height adjustments

@@ -130,6 +130,8 @@ Different agents for different tasks:
 ## Ui Progress
 
 
+![Chatbot Image](figs/v0.1.9.png)
+
 ![Chatbot Image](figs/v0.1.3_chatlite.png)
 
 ![Chatbot Image](figs/intial_render.png)

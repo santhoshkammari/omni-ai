@@ -58,4 +58,4 @@ AGENT_TYPES:List[str] = [
 
 
 ## height adjustments
-ARTIFACT_COLUMN_HEIGHT:int = 500
+ARTIFACT_COLUMN_HEIGHT:int = 550

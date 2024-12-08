@@ -6,15 +6,14 @@ from typing import List, Optional, Dict
 
 import aipromptlite
 
-from .base import st
-from datetime import datetime
+from .core import st
 
 from .baseprompt import BasePrompt
 from .utils import const
 from .omni_mixin import OmniMixin
 from .prompts import Prompts
-from .dark_streamlit_css import OmniAiChatCSS
-from ..utils.prompt_names_fetcher import get_available_prompts
+from .streamlit_css import OmniAiChatCSS
+from aichatlite.core.utils.prompt_names_fetcher import get_available_prompts
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
@@ -154,8 +153,6 @@ class OmniAIChatApp(OmniMixin):
             features_component = st.container()
 
         with chat_input_and_upload_component:
-            # OmniAiChatCSS.render_chat_history_area()
-            # self.chat_history_area = st.container()
             self.chat_holder = st.container()
 
             col1, col2 = self.chat_holder.columns([6, 1], gap='small',vertical_alignment='bottom')
@@ -291,20 +288,6 @@ class OmniAIChatApp(OmniMixin):
                 else:
                     div_content = f"""<div class='chat-message'>{message.content}</div>"""
                     st.markdown(div_content,unsafe_allow_html=True)
-        # with self.history_and_stream_area:
-        #     self.handle_chat_history_rendering()
-        #     self.chat_message_col = st.container()
-
-
-    # def handle_chat_history_rendering(self):
-    #     print('#'*50)
-    #     print(st.session_state.messages,flush=True)
-    #     print('-'*50)
-    #     for message in st.session_state.messages:
-    #         if isinstance(message, UserMessage):
-    #             st.success(message.content)
-    #         else:
-    #             st.success(message.content)
 
     def handle_selection_container(self):
         sc1, sc2, sc3, sc4,sc5 = st.columns([1,1,1,1,1], gap='small')

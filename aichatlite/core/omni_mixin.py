@@ -1,4 +1,4 @@
-from .base import st, OmniCore
+from .core import st, OmniCore
 from typing import Tuple, Generator
 
 from aichatlite.core.utils.const import WORD_LLAMA_DIM

@@ -133,6 +133,7 @@ class OmniAIChatApp(OmniMixin):
         self.chat_message_col = st.container(height=400)
 
 
+
     def handle_selection_container(self):
         sc1, sc2, sc3, sc4,sc5 = st.columns([1,1,1,1,1], gap='small')
         with sc1.popover('Model',icon=":material/model_training:"):

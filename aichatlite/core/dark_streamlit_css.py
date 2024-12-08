@@ -17,7 +17,7 @@ class OmniAiChatCSS:
                 /* Base styles */
                 .stApp {
                     background-color: var(--background-primary);
-                    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                    font-family: 'Tiempos Text', BlinkMacSystemFont, sans-serif;
                 }
 
                 /* Container adjustments */
@@ -132,8 +132,8 @@ class OmniAiChatCSS:
                         .chat-message {
                             font-family: 'Tiempos Text', 'Charter', 'Georgia', 'Cambria', 'Times New Roman', serif;
                             font-weight: 400;
-                            font-size: 16px;
-                            line-height: 1.6;
+                            font-size: 18px;
+                            # line-height: 1.6;
                             color: rgb(17, 24, 28);
                             letter-spacing: -0.011em;
                         }
@@ -150,15 +150,20 @@ class OmniAiChatCSS:
                 }
 
                 .app-header {
-                    font-size: 1rem;
+                    font-size: 2rem;
+                    font-family: 'Tiempos Text', 'Charter', 'Georgia', 'Cambria', 'Times New Roman', serif;
                     color: var(--text-primary);
-                    padding: 0.5rem 1rem;
-                    border-bottom: 1px solid var(--border-color);
-                    background: white;
+                    padding: 0rem 35rem;
+                    # border-bottom: 1px solid var(--border-color);
+                    # background: white;  
                     font-weight: 500;
+                    text-align: center;
+                    position: fixed;
+                    top: 0;
+                    
                 }
             </style>
-            <div class="app-header">OmniAI</div>
+            <div class="app-header">Claude</div>
             """, unsafe_allow_html=True)
 
     @staticmethod

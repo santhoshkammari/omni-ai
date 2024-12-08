@@ -440,9 +440,7 @@ class OmniAIChatApp(OmniMixin):
                     artifact_content += cleaned_chunk
                     artifact_content = clean_text(artifact_content)
                     st.session_state.artifact_content=artifact_content
-                    # artifact_content = f"<p style='font-size:30px;'>{artifact_content}</p>"
-                    art_format = f"""<div class='chat-message'>{artifact_content}</div>"""
-                    self.artifact_placeholder.code(art_format)
+                    self.artifact_placeholder.code(artifact_content)
 
 
         # Process the stream until complete

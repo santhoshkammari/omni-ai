@@ -71,9 +71,10 @@ class OmniMixin:
     @staticmethod
     def handle_files(query, file_content, file_extension):
         if file_extension=="pdf":
-            handler = PdfHandler(file_content=file_content,
-                                 word_llama_dim=WORD_LLAMA_DIM)
-            context = handler.run(query,k=5)
+            # handler = PdfHandler(file_content=file_content,
+            #                      word_llama_dim=WORD_LLAMA_DIM)
+            # context = handler.run(query,k=5)
+            context = ""
             prompt= f"<context>\n\n ### Attached PDF content:\n\n{context}\n</context>\n" + query
         else:
             prompt = query

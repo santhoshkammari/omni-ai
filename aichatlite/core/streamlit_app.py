@@ -72,19 +72,9 @@ class ModernUITheme:
             </style>
             """, unsafe_allow_html=True)
 
-class OmniAIChatApp(OmniMixin):
-
-    def __init__(self,config_path:Optional[Path]=None):
-        self.config = AppConfig.load_from_file(config_path) if config_path else AppConfig.get_default_config()
-        self.theme = ModernUITheme()
-        self.sidebar = st.sidebar
-        self.main_area = st.container()
-        self.initialize_session_state()
-
-    def initialize_session_state(self):
-        for key, default_value in self.config.DEFAULT_STATES.items():
-            if key not in st.session_state:
-                st.session_state[key] = default_value
+class UIManager:
+    def __init__(self,config):
+        self.config = config
 
 
     def render_sidebar(self):
@@ -97,6 +87,24 @@ class OmniAIChatApp(OmniMixin):
         st.sidebar.write("Model Information")
         for k,v in self.config.MODELS_TITLE_MAP.items():
             st.sidebar.write(f'{k} - {v}')
+
+class OmniAIChatApp(OmniMixin):
+
+    def __init__(self,config_path:Optional[Path]=None):
+        self.config = AppConfig.load_from_file(config_path) if config_path else AppConfig.get_default_config()
+        self.theme = ModernUITheme()
+        self.ui_manager=UIManager(config=self.config)
+        self.sidebar = st.sidebar
+        self.main_area = st.container()
+        self.initialize_session_state()
+
+    def initialize_session_state(self):
+        for key, default_value in self.config.DEFAULT_STATES.items():
+            if key not in st.session_state:
+                st.session_state[key] = default_value
+
+
+
 
     def create_new_chat(self):
         chat_id = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -174,7 +182,6 @@ class OmniAIChatApp(OmniMixin):
             st.button("Save Settings", key="save_settings")
 
 
-
         return selected_model
 
 
@@ -217,7 +224,7 @@ class OmniAIChatApp(OmniMixin):
                 self.start_action()
 
     def run(self):
-        self.render_sidebar()
+        self.ui_manager.render_sidebar()
         self.render_chat_interface()
 
     def get_system_prompt(self, agent_type):

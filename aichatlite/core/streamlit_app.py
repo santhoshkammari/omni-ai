@@ -320,8 +320,16 @@ class OmniAIChatApp(OmniMixin):
                                    label_visibility="hidden",
                                    key="prompt_name"
                                    )
+
             if prompt_name != 'DEFAULT_PROMPT':
                 st.session_state.current_prompt = getattr(aipromptlite, prompt_name)
+
+            custom_prompt = st.text_area('System Prompt',
+                                         placeholder=st.session_state.current_prompt,
+                                         height=100
+                                         )
+            if custom_prompt:
+                st.session_state.current_prompt = custom_prompt
 
         with sc4.popover("Tools",icon=":material/build_circle:"):
             st.subheader("Tools")

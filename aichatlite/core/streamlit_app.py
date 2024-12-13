@@ -133,9 +133,9 @@ class OmniAIChatApp(OmniMixin):
             OmniAiChatCSS.render_title()
 
             col1, col2 = st.columns([53,47],gap='small')
-
             self.chat_col = col1.container()
-            self.artifact_col = col2.container(height=self.config.ARTIFACT_COLUMN_HEIGHT,border=True)
+            self.main_col2_tab1,self.main_col2_tab2 = col2.tabs(["Artifact","Settings"])
+            self.artifact_col = self.main_col2_tab1.container(height=self.config.ARTIFACT_COLUMN_HEIGHT,border=True)
 
             with self.chat_col:
                 self.handle_chat_history_and_stream_component()
@@ -146,7 +146,7 @@ class OmniAIChatApp(OmniMixin):
         chat_and_feature_container = st.container()
         with chat_and_feature_container:
             chat_input_and_upload_component = st.container()
-            features_component = st.container()
+            features_component = self.main_col2_tab2.container()
 
         with chat_input_and_upload_component:
             self.chat_holder = st.container()
@@ -172,14 +172,14 @@ class OmniAIChatApp(OmniMixin):
                 st.subheader("Model Parameters")
 
                 # Core parameters
-                temperature = st.slider('Temperature',
+                temperature = st.slider('Creativity (temperature)',
                                         min_value=0.0,
                                         max_value=1.0,
                                         value=0.7,
                                         step=0.1,
                                         help="Controls randomness in responses. Higher values make output more random.")
 
-                max_tokens = st.slider('Max Tokens',
+                max_tokens = st.slider('Max words ( tokens)',
                                        min_value=1,
                                        max_value=2000,
                                        value=256,
@@ -212,14 +212,6 @@ class OmniAIChatApp(OmniMixin):
                 # Response format settings
                 st.subheader("Response Settings")
 
-                stream_output = st.toggle('Stream Output',
-                                          value=True,
-                                          help="Show response as it's being generated")
-
-                include_timestamps = st.toggle('Include Timestamps',
-                                               value=False,
-                                               help="Add timestamps to messages")
-
                 # Context window settings
                 max_context = st.select_slider('Max Context Length',
                                                options=[1000, 2000, 4000, 8000, 16000, 32000],
@@ -230,12 +222,6 @@ class OmniAIChatApp(OmniMixin):
                 message_format = st.radio('Message Format',
                                           options=['Markdown', 'Plain Text', 'HTML'],
                                           horizontal=True)
-
-                # System prompt settings
-                system_prompt = st.text_area('System Prompt',
-                                             value="You are a helpful assistant.",
-                                             height=100,
-                                             help="Define the AI assistant's behavior")
 
                 memory_type = st.selectbox('Conversation Memory',
                                            options=['All Messages', 'Last 10 Messages', 'Last 5 Messages', 'None'],
@@ -265,7 +251,7 @@ class OmniAIChatApp(OmniMixin):
 
 
     def handle_chat_history_and_stream_component(self):
-        self.history_and_stream_area = st.container(height=350)
+        self.history_and_stream_area = st.container(height=420)
 
         with self.history_and_stream_area:
             self.history_part = st.sidebar.container()
@@ -286,8 +272,13 @@ class OmniAIChatApp(OmniMixin):
                     st.markdown(div_content,unsafe_allow_html=True)
 
     def handle_selection_container(self):
-        sc1, sc2, sc3, sc4,sc5 = st.columns([1,1,1,1,1], gap='small')
-        with sc1.popover('Model',icon=":material/model_training:"):
+        # sc1, sc2, sc3, sc4,sc5 = st.columns([1,1,1,1,1], gap='small')
+        s1,s11 = st.columns([1,1],gap='small')
+        s2,s21 = st.columns([1,1],gap='small')
+        s3,s31 = st.columns([1,1],gap='small')
+        s4,s41 = st.columns([1,1],gap='small')
+
+        with s1.popover('Model',icon=":material/model_training:"):
             st.success('Available Models')
             models = list(self.config.MODELS_TITLE_MAP.keys()) + self.config.AVAILABLE_MODELS
             selected_model = st.radio(
@@ -298,7 +289,8 @@ class OmniAIChatApp(OmniMixin):
             if selected_model not in self.config.AVAILABLE_MODELS:
                 selected_model = self.config.MODELS_TITLE_MAP.get(selected_model, self.config.AVAILABLE_MODELS[0])
 
-        with sc2.popover('Type',icon=":material/tune:"):
+
+        with s2.popover('Type',icon=":material/psychology:"):
             st.success('TaskType')
             agent_type = st.radio("TaskType", self.config.AGENT_TYPES,
                                   label_visibility="hidden",
@@ -308,8 +300,7 @@ class OmniAIChatApp(OmniMixin):
                 st.session_state.agent_type = agent_type
 
 
-
-        with sc3.popover("Style",icon=":material/palette:"):
+        with s3.popover("Style",icon=":material/palette:"):
             st.success('Model Prompts')
             prompt_name = st.radio("Model Prompts",
                                    get_available_prompts(),
@@ -327,23 +318,26 @@ class OmniAIChatApp(OmniMixin):
             if custom_prompt:
                 st.session_state.current_prompt = custom_prompt
 
-        with sc4.popover("Tools",icon=":material/build_circle:"):
-            st.subheader("Tools & Agents")
-            st.toggle("WebSearch")
-            st.toggle("Code Interpreter")
 
-            with st.expander("Agents"):
-                agents = self.config.AGENTS
-                selected_agent = st.radio(
+        with s4.popover("Agents",icon=":material/engineering:"):
+            st.success("Agents")
+            agents = self.config.AGENTS
+            selected_agent = st.radio(
                     "Available Agents",
                     label_visibility='hidden',
-                    options=agents
+                    options=agents,
+                help="Upcoming"
                 )
 
-        with sc5.popover("exp",icon=":material/experiment:"):
+        with st.popover("Experiments",icon=":material/experiment:"):
             st.subheader("Advanced Settings")
             st.button("Save Settings", key="save_settings")
 
+
+        s11.success(selected_model)
+        s21.success(agent_type)
+        s31.success(prompt_name)
+        s41.success(selected_agent)
 
         return selected_model
 

@@ -85,13 +85,6 @@ class UIManager:
     def render_sidebar(self):
         st.sidebar.title("Chat History")
 
-        for chat_id, chat_info in st.session_state.chats.items():
-            if st.sidebar.button(f"{chat_info['name']} - {chat_info['timestamp'][:10]}"):
-                st.session_state.current_chat_id = chat_id
-
-        st.sidebar.write("Model Information")
-        for k,v in self.config.MODELS_TITLE_MAP.items():
-            st.sidebar.write(f'{k} - {v}')
 
 @dataclass
 class UserMessage:
@@ -275,7 +268,7 @@ class OmniAIChatApp(OmniMixin):
         self.history_and_stream_area = st.container(height=350)
 
         with self.history_and_stream_area:
-            self.history_part = st.container()
+            self.history_part = st.sidebar.container()
             self.chat_message_col = st.container()
 
 

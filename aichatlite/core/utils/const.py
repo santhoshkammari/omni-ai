@@ -50,9 +50,8 @@ MODELS_TITLE_MAP: Dict[str, str] = {
 AGENT_TYPES:List[str] = [
     "QuestionAnswer",
     "Reasoning",
-    "FastSearchAI",
-    "DeepSearchAI",
-    "IntelligentSearchAI"
+    "GoogleSearchAI",
+    "DeepGoogleSearchAI"
     ]
 
 AGENTS:List[str] = [
@@ -64,4 +63,4 @@ AGENTS:List[str] = [
 
 
 ## height adjustments
-ARTIFACT_COLUMN_HEIGHT:int = 550
+ARTIFACT_COLUMN_HEIGHT:int = 500

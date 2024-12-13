@@ -40,7 +40,7 @@ class AppConfig:
             "uploaded_file": None,
             "agent_type": const.AGENT_TYPES[0],
             "web_search": False,
-            "current_prompt": "",
+            "current_prompt": getattr(aipromptlite, "CLAUDE_SYS_PROMPT"),
             "query": None,
             "messages": [],  # Add this for better history management
             "model_cache": {},  # Add this for model caching
@@ -289,8 +289,7 @@ class OmniAIChatApp(OmniMixin):
             if selected_model not in self.config.AVAILABLE_MODELS:
                 selected_model = self.config.MODELS_TITLE_MAP.get(selected_model, self.config.AVAILABLE_MODELS[0])
 
-
-        with s2.popover('Type',icon=":material/psychology:"):
+        with s2.popover('TaskType',icon=":material/psychology:"):
             st.success('TaskType')
             agent_type = st.radio("TaskType", self.config.AGENT_TYPES,
                                   label_visibility="hidden",
@@ -308,7 +307,7 @@ class OmniAIChatApp(OmniMixin):
                                    key="prompt_name"
                                    )
 
-            if prompt_name != 'DEFAULT_PROMPT':
+            if prompt_name != 'CLAUDE_SYSTEM_PROMPT':
                 st.session_state.current_prompt = getattr(aipromptlite, prompt_name)
 
             custom_prompt = st.text_area('System Prompt',
@@ -321,7 +320,7 @@ class OmniAIChatApp(OmniMixin):
 
         with s4.popover("Agents",icon=":material/engineering:"):
             st.success("Agents")
-            agents = self.config.AGENTS
+            agents = ['None',self.config.AGENTS]
             selected_agent = st.radio(
                     "Available Agents",
                     label_visibility='hidden',

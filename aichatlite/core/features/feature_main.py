@@ -1,3 +1,5 @@
+import time
+
 from .handle_google_searchai import *
 from .handle_google_searchai import deep_google_search,google_searchai
 class FeatureHandlerMain:
@@ -16,10 +18,14 @@ class FeatureHandlerMain:
             return self.chatbot.generator(self.query,
                                          system_prompt=self.system_prompt)
         elif self.agent_type in ["GoogleSearchAI","DeepGoogleSearchAI"]:
+            st = time.perf_counter()
             try:
                 google_results = google_searchai(self.query) if self.agent_type=="GoogleSearchAI" else deep_google_search(self.query)
             except:
                 google_results = "No Results Found in Google Search"
+            et = time.perf_counter()
+            gr_tt = et-st
+            print(f'Google results Time taken : {gr_tt}s')
             enhanced_query = (f"Google Results for {self.query} is {google_results}"
                               f"\n\n Now based on google results answer {self.query}"
                               f"Start by saying Using Google Results or Google results not Found"

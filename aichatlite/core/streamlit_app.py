@@ -156,7 +156,8 @@ class OmniAIChatApp(OmniMixin):
             with col1:
                 if query := st.text_area(placeholder="How can Claude help you today?",
                                          label="UserQueryInput",
-                                         label_visibility='hidden'):
+                                         label_visibility='hidden',
+                                         value="what is new in transformers library?"):
                     st.session_state.query = query
                     self.current_query = query
 

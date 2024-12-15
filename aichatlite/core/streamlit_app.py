@@ -17,18 +17,18 @@ from aichatlite.core.utils.prompt_names_fetcher import get_available_prompts
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
+
 @dataclass
 class AppConfig:
-    AVAILABLE_MODELS: List[str] = field(default_factory=lambda :const.AVAILABLE_MODELS)
-    AGENT_TYPES: List[str] = field(default_factory=lambda :const.AGENT_TYPES)
-    AGENTS: List[str] = field(default_factory=lambda :const.AGENTS)
+    AVAILABLE_MODELS: List[str] = field(default_factory=lambda: const.AVAILABLE_MODELS)
+    AGENT_TYPES: List[str] = field(default_factory=lambda: const.AGENT_TYPES)
+    AGENTS: List[str] = field(default_factory=lambda: const.AGENTS)
     BASE_PROMPT: BasePrompt = BasePrompt()
     AVAILABLE_PROMPTS: List[str] = field(default_factory=get_available_prompts)
-    MODELS_TITLE_MAP: Dict[str, str] = field(default_factory=lambda :const.MODELS_TITLE_MAP)
+    MODELS_TITLE_MAP: Dict[str, str] = field(default_factory=lambda: const.MODELS_TITLE_MAP)
     ARTIFACT_COLUMN_HEIGHT: int = const.ARTIFACT_COLUMN_HEIGHT
     ENABLE_EXPERIMENTAL: bool = False
     CHAT_HISTORY_LIMIT: int = 100
-
 
     def __post_init__(self):
         self.DEFAULT_STATES = {
@@ -44,13 +44,12 @@ class AppConfig:
             "query": None,
             "messages": [],  # Add this for better history management
             "model_cache": {},  # Add this for model caching
-            "chat_content":"",
-            "artifact_content":""
+            "chat_content": "",
+            "artifact_content": ""
         }
 
-
     @classmethod
-    def load_from_file(cls, config_path:Path):
+    def load_from_file(cls, config_path: Path):
         if config_path.exists():
             with config_path.open() as f:
                 config_data = json.load(f)
@@ -60,6 +59,7 @@ class AppConfig:
     @staticmethod
     def get_default_config() -> 'AppConfig':
         return AppConfig()
+
 
 class ModernUITheme:
     @staticmethod
@@ -77,10 +77,10 @@ class ModernUITheme:
             </style>
             """, unsafe_allow_html=True)
 
-class UIManager:
-    def __init__(self,config):
-        self.config = config
 
+class UIManager:
+    def __init__(self, config):
+        self.config = config
 
     def render_sidebar(self):
         st.sidebar.title("Chat History")
@@ -88,32 +88,31 @@ class UIManager:
 
 @dataclass
 class UserMessage:
-    content:str
+    content: str
+
 
 @dataclass
 class AIMessage:
     content: str
 
+
 class ChatManager:
-    def __init__(self, chat_id: str,config:AppConfig):
+    def __init__(self, chat_id: str, config: AppConfig):
         self.chat_id = chat_id
         self.config = config
 
-    def add_message(self, message: AIMessage|UserMessage):
+    def add_message(self, message: AIMessage | UserMessage):
         st.session_state.messages.append(message)
         if len(st.session_state.messages) > self.config.CHAT_HISTORY_LIMIT:
             st.session_state.messages.pop(0)
 
 
-
-
-
 class OmniAIChatApp(OmniMixin):
 
-    def __init__(self,config_path:Optional[Path]=None):
+    def __init__(self, config_path: Optional[Path] = None):
         self.config = AppConfig.load_from_file(config_path) if config_path else AppConfig.get_default_config()
         self.theme = ModernUITheme()
-        self.ui_manager=UIManager(config=self.config)
+        self.ui_manager = UIManager(config=self.config)
         self.chat_manager = ChatManager(chat_id=str(uuid.uuid4()),
                                         config=self.config)
         self.sidebar = st.sidebar
@@ -126,21 +125,19 @@ class OmniAIChatApp(OmniMixin):
             if key not in st.session_state:
                 st.session_state[key] = default_value
 
-
     def render_chat_interface(self):
         with self.main_area:
             OmniAiChatCSS.render_main()
             OmniAiChatCSS.render_title()
 
-            col1, col2 = st.columns([53,47],gap='small')
+            col1, col2 = st.columns([53, 47], gap='small')
             self.chat_col = col1.container()
-            self.main_col2_tab1,self.main_col2_tab2 = col2.tabs(["Artifact","Settings"])
-            self.artifact_col = self.main_col2_tab1.container(height=self.config.ARTIFACT_COLUMN_HEIGHT,border=True)
+            self.main_col2_tab1, self.main_col2_tab2 = col2.tabs(["Artifact", "Settings"])
+            self.artifact_col = self.main_col2_tab1.container(height=self.config.ARTIFACT_COLUMN_HEIGHT, border=True)
 
             with self.chat_col:
                 self.handle_chat_history_and_stream_component()
                 self.handle_chat_and_feature_component()
-
 
     def handle_chat_and_feature_component(self):
         chat_and_feature_container = st.container()
@@ -151,19 +148,17 @@ class OmniAIChatApp(OmniMixin):
         with chat_input_and_upload_component:
             self.chat_holder = st.container()
 
-            col1, col2 = self.chat_holder.columns([6, 1], gap='small',vertical_alignment='bottom')
+            col1, col2 = self.chat_holder.columns([6, 1], gap='small', vertical_alignment='bottom')
 
             with col1:
                 if query := st.text_area(placeholder="How can Claude help you today?",
                                          label="UserQueryInput",
                                          label_visibility='hidden',
-                                         value="what is new in transformers library?"):
+                                         value="hi"):
                     st.session_state.query = query
                     self.current_query = query
 
-
-
-            with col2.popover("",icon=":material/attach_file_add:"):
+            with col2.popover("", icon=":material/attach_file_add:"):
                 st.session_state.uploaded_file = st.file_uploader('uploaded_file', label_visibility='hidden',
                                                                   accept_multiple_files=True,
                                                                   key="file_uploader_key"
@@ -228,14 +223,12 @@ class OmniAIChatApp(OmniMixin):
                                            options=['All Messages', 'Last 10 Messages', 'Last 5 Messages', 'None'],
                                            help="Control how much conversation history to maintain")
 
-
-
         with features_component:
             selected_model = self.handle_selection_container()
 
             if st.session_state.chatbot is None or st.session_state.selected_model != selected_model:
                 system_prompt = self.get_system_prompt(st.session_state.agent_type)
-                chatbot_instance = self.create_chat_instance(selected_model,system_prompt)
+                chatbot_instance = self.create_chat_instance(selected_model, system_prompt)
                 # chatbot_instance.chatbot.new_conversation(
                 #     modelIndex=self.AVAILABLE_MODELS.index(selected_model),
                 #     system_prompt=system_prompt,
@@ -250,7 +243,6 @@ class OmniAIChatApp(OmniMixin):
             st.session_state.artifact_content = ""
             self.start_action()
 
-
     def handle_chat_history_and_stream_component(self):
         self.history_and_stream_area = st.container(height=420)
 
@@ -258,28 +250,27 @@ class OmniAIChatApp(OmniMixin):
             self.history_part = st.sidebar.container()
             self.chat_message_col = st.container()
 
-
         with self.history_part.expander("Chat Conversation"):
             messages = st.session_state.messages.copy()
             nm = messages.copy()
             for i in range(0, len(messages)):
-                if isinstance(messages[i], AIMessage) and (i+2)<len(messages):
-                    nm[i]=messages[i+2]
+                if isinstance(messages[i], AIMessage) and (i + 2) < len(messages):
+                    nm[i] = messages[i + 2]
             for message in nm[:-1]:
                 if isinstance(message, UserMessage):
                     st.success(message.content)
                 else:
                     div_content = f"""<div class='chat-message'>{message.content}</div>"""
-                    st.markdown(div_content,unsafe_allow_html=True)
+                    st.markdown(div_content, unsafe_allow_html=True)
 
     def handle_selection_container(self):
         # sc1, sc2, sc3, sc4,sc5 = st.columns([1,1,1,1,1], gap='small')
-        s1,s11 = st.columns([1,1],gap='small')
-        s2,s21 = st.columns([1,1],gap='small')
-        s3,s31 = st.columns([1,1],gap='small')
-        s4,s41 = st.columns([1,1],gap='small')
+        s1, s11 = st.columns([1, 1], gap='small')
+        s2, s21 = st.columns([1, 1], gap='small')
+        s3, s31 = st.columns([1, 1], gap='small')
+        s4, s41 = st.columns([1, 1], gap='small')
 
-        with s1.popover('Model',icon=":material/model_training:"):
+        with s1.popover('Model', icon=":material/model_training:"):
             st.success('Available Models')
             models = list(self.config.MODELS_TITLE_MAP.keys()) + self.config.AVAILABLE_MODELS
             selected_model = st.radio(
@@ -290,7 +281,7 @@ class OmniAIChatApp(OmniMixin):
             if selected_model not in self.config.AVAILABLE_MODELS:
                 selected_model = self.config.MODELS_TITLE_MAP.get(selected_model, self.config.AVAILABLE_MODELS[0])
 
-        with s2.popover('TaskType',icon=":material/psychology:"):
+        with s2.popover('TaskType', icon=":material/psychology:"):
             st.success('TaskType')
             agent_type = st.radio("TaskType", self.config.AGENT_TYPES,
                                   label_visibility="hidden",
@@ -299,8 +290,7 @@ class OmniAIChatApp(OmniMixin):
             if st.session_state.agent_type is None or st.session_state.agent_type != agent_type:
                 st.session_state.agent_type = agent_type
 
-
-        with s3.popover("Style",icon=":material/palette:"):
+        with s3.popover("Style", icon=":material/palette:"):
             st.success('Model Prompts')
             prompt_name = st.radio("Model Prompts",
                                    get_available_prompts(),
@@ -318,21 +308,19 @@ class OmniAIChatApp(OmniMixin):
             if custom_prompt:
                 st.session_state.current_prompt = custom_prompt
 
-
-        with s4.popover("Agents",icon=":material/engineering:"):
+        with s4.popover("Agents", icon=":material/engineering:"):
             st.success("Agents")
-            agents = ['None',self.config.AGENTS]
+            agents = ['None', self.config.AGENTS]
             selected_agent = st.radio(
-                    "Available Agents",
-                    label_visibility='hidden',
-                    options=agents,
+                "Available Agents",
+                label_visibility='hidden',
+                options=agents,
                 help="Upcoming"
-                )
+            )
 
-        with st.popover("Experiments",icon=":material/experiment:"):
+        with st.popover("Experiments", icon=":material/experiment:"):
             st.subheader("Advanced Settings")
             st.button("Save Settings", key="save_settings")
-
 
         s11.success(selected_model)
         s21.success(agent_type)
@@ -341,12 +329,9 @@ class OmniAIChatApp(OmniMixin):
 
         return selected_model
 
-
-
     def start_action(self):
         # self.handle_chat_history_rendering()
         self.handle_chat_input_and_stream()
-
 
     def handle_chat_input_and_stream(self):
         system_prompt = self.add_time_and_artifact_to_system_prompt(
@@ -417,15 +402,14 @@ class OmniAIChatApp(OmniMixin):
                 if current_mode == "chat":
                     chat_content += cleaned_chunk
                     chat_content = clean_text(chat_content)
-                    st.session_state.chat_content=chat_content
+                    st.session_state.chat_content = chat_content
                     format_content = f"""<div class='chat-message'>{chat_content}</div>"""
-                    self.chat_placeholder.markdown(format_content,unsafe_allow_html=True)
+                    self.chat_placeholder.markdown(format_content, unsafe_allow_html=True)
                 else:
                     artifact_content += cleaned_chunk
                     artifact_content = clean_text(artifact_content)
-                    st.session_state.artifact_content=artifact_content
+                    st.session_state.artifact_content = artifact_content
                     self.artifact_placeholder.code(artifact_content)
-
 
         # Process the stream until complete
         while generation_flag:
@@ -433,9 +417,9 @@ class OmniAIChatApp(OmniMixin):
 
         # Final render of both areas
         if chat_content:
-            self.chat_placeholder.markdown(chat_content,unsafe_allow_html=True)
+            self.chat_placeholder.markdown(chat_content, unsafe_allow_html=True)
         if artifact_content:
-            self.artifact_placeholder.code(artifact_content,unsafe_allow_html=True)
+            self.artifact_placeholder.code(artifact_content, unsafe_allow_html=True)
 
     def run(self):
         self.ui_manager.render_sidebar()

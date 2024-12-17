@@ -13,10 +13,11 @@ class OmniMixin:
 
     @staticmethod
     def get_chat_response(chatbot: OmniCore, agent_type:str, query: str, web_search: bool = False,
-                          system_prompt="") -> Generator:
+                          system_prompt="",
+                          kb_data="") -> Generator:
         handler = FeatureHandlerMain(chatbot=chatbot, agent_type=agent_type, query=query,web_search=web_search,
                                      system_prompt=system_prompt)
-        return handler.generate()
+        return handler.generate(kb_data=kb_data)
 
     @staticmethod
     def data_stream(generator: Generator) -> Generator[Tuple[str, bool], None, None]:

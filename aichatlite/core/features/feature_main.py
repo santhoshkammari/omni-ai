@@ -3,16 +3,25 @@ import time
 from .handle_google_searchai import *
 from .handle_google_searchai import deep_google_search,google_searchai
 class FeatureHandlerMain:
-    def __init__(self, chatbot, agent_type, query, web_search,system_prompt=""):
+    def __init__(self, chatbot, agent_type, query, web_search,system_prompt="",
+                 kb_data=""):
         self.chatbot = chatbot
         self.agent_type = agent_type
         self.query = query
         self.web_search = web_search
         self.system_prompt = system_prompt
+        self.kb_data = kb_data  # Knowledge base data for reasoning agents
 
-    def generate(self):
+    def add_knowledge_base_to_query(self,kb_data=""):
+        if kb_data:
+            self.kb_data+=kb_data
+            return f"\n\n### [KNOWLEDGE_BASE_DATA_START]:\n\n{self.kb_data} [KNOWLEDGE_BASE_DATA_END]\n\n" + f"Now Answer \n {self.query}"
+        return self.query
+
+    def generate(self,kb_data=""):
         if self.agent_type == "QuestionAnswer":
-            return self.chatbot.generator(self.query,
+            query= self.add_knowledge_base_to_query(kb_data=kb_data)
+            return self.chatbot.generator(query,
                                           system_prompt=self.system_prompt)
         elif self.agent_type == "Reasoning":
             return self.chatbot.generator(self.query,

@@ -23,7 +23,7 @@ class GoogleSearch(BaseSearch):
             compress_type=compress_type
         )
 
-    def fetchSearch(self, query: str):
+    def fetch(self, query: str):
         try:
             enhanced_query = query + " google result"
             self._fetch_result = vision(enhanced_query)

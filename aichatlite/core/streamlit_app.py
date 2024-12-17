@@ -2,9 +2,10 @@ import json
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 
 import aipromptlite
+from aichatlite.core.tools.base import BaseSearch
 
 from .core import st
 
@@ -14,6 +15,8 @@ from .omni_mixin import OmniMixin
 from .prompts import Prompts
 from .streamlit_css import OmniAiChatCSS
 from aichatlite.core.utils.prompt_names_fetcher import get_available_prompts
+from .agents.regenearate_query_agent import QueryReGenerator
+from .tools import WikipediaSearch,YouTubeSearch,ArxivSearch,BingSearch,GoogleSearch,GitHubSearch
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
 
@@ -42,6 +45,7 @@ class AppConfig:
             "web_search": False,
             "current_prompt": getattr(aipromptlite, "CLAUDE_SYS_PROMPT"),
             "query": None,
+            "knowledge_base_data":"",
             "messages": [],  # Add this for better history management
             "model_cache": {},  # Add this for model caching
             "chat_content": "",
@@ -132,12 +136,17 @@ class OmniAIChatApp(OmniMixin):
 
             col1, col2 = st.columns([53, 47], gap='small')
             self.chat_col = col1.container()
-            self.main_col2_tab1, self.main_col2_tab2 = col2.tabs(["Artifact", "Settings"])
+            self.main_col2_tab1, self.main_col2_tab2,self.knowledge_base_tab = col2.tabs(["Artifact", "Settings","KnowledgeBase"])
             self.artifact_col = self.main_col2_tab1.container(height=self.config.ARTIFACT_COLUMN_HEIGHT, border=True)
 
+            # self.handle_knowledge_base_tab()
             with self.chat_col:
                 self.handle_chat_history_and_stream_component()
                 self.handle_chat_and_feature_component()
+
+    def update_current_query(self,query):
+        st.session_state.query = query
+        self.current_query = query
 
     def handle_chat_and_feature_component(self):
         chat_and_feature_container = st.container()
@@ -151,12 +160,12 @@ class OmniAIChatApp(OmniMixin):
             col1, col2 = self.chat_holder.columns([6, 1], gap='small', vertical_alignment='bottom')
 
             with col1:
-                if query := st.text_area(placeholder="How can Claude help you today?",
-                                         label="UserQueryInput",
+                query = st.text_area(placeholder="How can Claude help you today?",
+                                         label="query",
                                          label_visibility='hidden',
-                                         value="hi"):
-                    st.session_state.query = query
-                    self.current_query = query
+                                         value="python code to sum two arrays, example for [1,2] and [3,4]"
+                                     )
+                self.update_current_query(query)
 
             with col2.popover("", icon=":material/attach_file_add:"):
                 st.session_state.uploaded_file = st.file_uploader('uploaded_file', label_visibility='hidden',
@@ -241,7 +250,8 @@ class OmniAIChatApp(OmniMixin):
             st.session_state.messages.append(AIMessage(content=f"AI: {st.session_state.chat_content}"))
             st.session_state.chat_content = ""
             st.session_state.artifact_content = ""
-            self.start_action()
+            kb_data = self.handle_knowledge_base_tab(query)
+            self.start_action(kb_data)
 
     def handle_chat_history_and_stream_component(self):
         self.history_and_stream_area = st.container(height=420)
@@ -329,11 +339,11 @@ class OmniAIChatApp(OmniMixin):
 
         return selected_model
 
-    def start_action(self):
+    def start_action(self,kb_data=""):
         # self.handle_chat_history_rendering()
-        self.handle_chat_input_and_stream()
+        self.handle_chat_input_and_stream(kb_data)
 
-    def handle_chat_input_and_stream(self):
+    def handle_chat_input_and_stream(self,kb_data=""):
         system_prompt = self.add_time_and_artifact_to_system_prompt(
             system_prompt=st.session_state.current_prompt)
         self.artifact_placeholder = self.artifact_col.empty()
@@ -342,7 +352,8 @@ class OmniAIChatApp(OmniMixin):
                                                     st.session_state.agent_type,
                                                     st.session_state.query,
                                                     web_search=st.session_state.web_search,
-                                                    system_prompt=system_prompt)
+                                                    system_prompt=system_prompt,
+                                                    kb_data=kb_data)
 
         # Initialize accumulators
         chat_content = ""
@@ -433,3 +444,98 @@ class OmniAIChatApp(OmniMixin):
 
     def add_time_and_artifact_to_system_prompt(self, system_prompt):
         return BasePrompt.TODAY_DATE + system_prompt + "\n" + BasePrompt.ARTIFACT
+
+    def handle_knowledge_base_tab(self,query):
+        kb_data = ""
+        with self.knowledge_base_tab:
+            st.subheader("Knowledge Base")
+            st.text("Under construction")
+            contents= ["hai","this ","is"]
+            with st.expander("KB") as main_expander:
+                for c in contents:
+                    with st.popover('idx'):
+                        st.write(c)
+
+            with st.popover("wikipedia"):
+                kb_data = KnowledgeItem.render('wikipedia', query=query,
+                                               query_regen_tool=QueryReGenerator(),
+                                               tool=WikipediaSearch("wikipedia"))
+            with st.popover("google"):
+                kb_data = KnowledgeItem.render('google', query=query,
+                                               query_regen_tool=QueryReGenerator(),
+                                               tool=GoogleSearch("google"))
+
+            with st.popover("bing"):
+                kb_data = KnowledgeItem.render('bing', query=query,
+                                               query_regen_tool=QueryReGenerator(),
+                                               tool=BingSearch("bing"))
+
+            with st.popover("arxiv"):
+                kb_data = KnowledgeItem.render('arxiv', query=query,
+                                               query_regen_tool=QueryReGenerator(),
+                                               tool=ArxivSearch("arxiv"))
+
+            with st.popover("github"):
+                kb_data = KnowledgeItem.render('github', query=query,
+                                               query_regen_tool=QueryReGenerator(),
+                                               tool=GitHubSearch("github"))
+
+            with st.popover("youtube"):
+                kb_data = KnowledgeItem.render('youtube', query=query,
+                                               query_regen_tool=QueryReGenerator(),
+                                               tool=YouTubeSearch("youtube"))
+        return kb_data
+
+
+class KnowledgeItem:
+    @classmethod
+    def render(self, name, query="",
+               query_regen_tool: QueryReGenerator = None,
+               tool: BaseSearch = None):
+        if f'old_{name}_query' not in st.session_state:
+            st.session_state[f"old_{name}_query"] = query
+        if f'{name}_gen_query' not in st.session_state:
+            st.session_state[f'{name}_gen_query'] = query
+        if f'{name}_gen_query_ctx' not in st.session_state:
+            st.session_state[f'{name}_gen_query_ctx'] = [query]
+        if f'{name}_gen_query_content' not in st.session_state:
+            st.session_state[f'{name}_gen_query_content'] = ""
+
+        if st.session_state[f'old_{name}_query'] != query:
+            st.session_state[f'{name}_gen_query'] = query
+            st.session_state[f'old_{name}_query'] = query
+            st.session_state[f'{name}_gen_query_ctx'] = [query]
+            st.session_state[f'{name}_gen_query_content'] = ""
+
+        st.success(st.session_state[f'{name}_gen_query'])
+
+        regen, fetch, compress, add_to_kb = st.columns([1, 1, 1, 1])
+        content = st.empty()
+        regen_button_status = regen.button(f"{name}_Gen", icon=':material/youtube_searched_for:',
+                                           help="RegenQuery")
+        fetch_button_status = fetch.button(f"{name}_Fetch", icon=':material/call_received:', help="FetchData")
+        compress_button_status = compress.button(f"{name}_Comp", icon=':material/compress:', help="Compress")
+        kb_button_status = add_to_kb.button(f"{name}_KB", icon=':material/chat_add_on:', help="Add to KnowledgeBase")
+
+        if regen_button_status:
+            st.session_state[f'{name}_gen_query'] = query_regen_tool.regenerate(st.session_state[f'{name}_gen_query_ctx'])
+            st.session_state[f'{name}_gen_query_ctx'].append(st.session_state[f'{name}_gen_query'])
+
+        if fetch_button_status:
+            with st.spinner(f"fetching {name}..."):
+                wiki_content = tool.fetch(st.session_state[f'{name}_gen_query'])
+            st.session_state[f'{name}_gen_query_content'] += wiki_content
+
+        if compress_button_status:
+            with st.spinner("compressing data..."):
+                compressed_data = tool.compress(st.session_state[f'{name}_gen_query_content'])
+            st.session_state[f'{name}_gen_query_content'] = compressed_data
+
+        if kb_button_status:
+            with st.spinner("Adding kb..."):
+                st.session_state[f'knowledge_base_data'] += st.session_state[f'{name}_gen_query_content']
+
+        with content.expander("content"):
+            st.write(st.session_state[f'{name}_gen_query_content'])
+
+        return st.session_state[f'knowledge_base_data']

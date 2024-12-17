@@ -131,7 +131,7 @@ class OmniAiChatCSS:
 
                         .chat-message {
                             # font-family: 'Charter', 'Georgia', 'Cambria', 'Times New Roman', serif;
-                            font-family: "__tiempos_b6f14e, tiempos_Fallback_b6f14e, ui-serif, Georgia, Cambria, Times New Roman, Times, serif",
+                            font-family: 'Tiempos Text', 'Charter', 'Georgia', 'Cambria', 'Times New Roman', serif;
 
                             # font-weight: 400;
                             # font-size: 16px;

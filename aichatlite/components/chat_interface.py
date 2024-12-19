@@ -1,4 +1,7 @@
-from ..base.state import StateManager
+from typing import Callable
+import streamlit as st
+
+from aichatlite.utils.state import StateManager
 
 
 class ChatInterface:

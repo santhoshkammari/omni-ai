@@ -20,6 +20,7 @@ python = "^3.10"
 streamlit="^1.40.2"
 ailitellm="^0.1.6"
 aipromptlite="^0.1.13"
+streamlit-chat="^0.1.1"
 
 [tool.poetry.scripts]
 claude-chat = "chat_gui:run_app"

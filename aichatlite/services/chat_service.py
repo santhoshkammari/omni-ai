@@ -1,7 +1,7 @@
 from typing import Generator, Optional
 import time
 import streamlit as st
-from aichatlite.components.chat_interface import ChatMessage
+from aichatlite.utils.schema import ChatMessage
 
 
 class ChatService:

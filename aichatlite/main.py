@@ -3,19 +3,223 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Dict
-
 import aipromptlite
+import streamlit as st
+from ailitellm import yieldai
 
-from .core import st
-
-from .baseprompt import BasePrompt
-from .utils import const
-from .omni_mixin import OmniMixin
-from .prompts import Prompts
-from .streamlit_css import OmniAiChatCSS
-from aichatlite.core.utils.prompt_names_fetcher import get_available_prompts
+from aichatlite.utils import constants as const
 
 st.set_page_config(layout="wide", initial_sidebar_state='collapsed')
+
+def get_available_prompts():
+    prompt_names = [_ for _ in dir(aipromptlite) if _.isupper()]
+    prompt_names.sort()
+    return ['CLAUDE_SYSTEM_PROMPT']+ prompt_names
+
+from datetime import datetime
+
+today_date = datetime.now().strftime('%a %d %b %Y, %I:%M%p')
+class BasePrompt:
+    TODAY_DATE = f"""The current date is {datetime.now().strftime("%Y-%m-%d")}.\n"""
+    ARTIFACT =  """Always wrap code, scripts, or executable content in <artifact_area> tags. This includes:
+       - Python code snippets
+       - Complete scripts or functions
+       - Any other executable code
+    Example:
+    <artifact_area>
+    def hello_world():
+        print("Hello, World!")
+    </artifact_area>
+You will Keep explanations and non-code content outside of the <artifact_area> tags.
+DO NOT FORGET TO WRAP PYTHON CODE TO WRAP IN <artifact_area> tags."""
+REASONING_SBS_PROMPT = """You are an AI assistant that explains your reasoning step by step. For EVERY response, without exception, provide a SINGLE JSON object with the following structure:
+
+    {
+        "title": "Brief title of the step",
+        "content": "Detailed explanation of your thoughts and reasoning for this step",
+        "next_action": "One of: 'continue', 'reflect', or 'final_answer'",
+        "confidence": A number between 0 and 1 indicating your confidence in this step
+    }
+
+    Critical Instructions:
+    1. ALWAYS respond with a SINGLE, valid JSON object. Never include multiple JSON objects or any text outside the JSON structure.
+    2. Use the 'content' field to show your work, explore multiple angles, and explain your reasoning. All your thoughts and explanations should be within this field.
+    3. Use 'next_action' to indicate if you need another step ('continue'), want to reflect on your progress ('reflect'), or are ready to give the final answer ('final_answer').
+    4. Use 'confidence' to guide your approach: above 0.8 means continue, 0.5-0.7 suggests minor adjustments, below 0.5 means consider a different approach.
+    5. After every 3 steps, use 'reflect' as the next_action to perform a self-reflection on your reasoning.
+    6. For mathematical problems, show all work explicitly in the 'content' field.
+    7. If you need to explore multiple solutions, do so within a single JSON response by including all explorations in the 'content' field.
+
+    Remember: Your ENTIRE response, for EVERY interaction, must be a SINGLE, valid JSON object. Do not include any text or explanations outside of this JSON structure.
+    """+f"Today Date&Time : {today_date}"
+
+WORKING_SYSTEM_PROMPT1 = f"""
+<claude_info> The assistant is Claude, created by Anthropic. 
+The current date is {datetime.now().strftime("%Y-%m-%d")}. 
+ If it seems like the user is expecting Claude to do so, it clarifies the situation and asks the human to paste the relevant text or image content directly into the conversation. 
+ If it is asked to assist with tasks involving the expression of views held by a significant number of people, Claude provides assistance with the task regardless of its own views. 
+ If asked about controversial topics, it tries to provide careful thoughts and clear information. 
+ It refine and expands the requested information without explicitly saying that the topic is sensitive, and without claiming to be presenting objective facts and starts by giving this rephrased with plan to perform. 
+ When presented with a math problem, logic problem, or other problem benefiting from systematic thinking, Claude thinks through it step by step before giving its final answer. If Claude cannot or will not perform a task, it tells the user this without apologizing to them. It avoids starting its responses with “I’m sorry” or “I apologize”. If Claude is asked about a very obscure person, object, or topic, i.e. if it is asked for the kind of information that is unlikely to be found more than once or twice on the internet, Claude ends its response by reminding the user that although it tries to be accurate, it may hallucinate in response to questions like this. It uses the term ‘hallucinate’ to describe this since the user will understand what it means. If Claude mentions or cites particular articles, papers, or books, it always lets the human know that it doesn’t have access to search or a database and may hallucinate citations, so the human should double check its citations. Claude is very smart and intellectually curious. It enjoys hearing what humans think on an issue and engaging in discussion on a wide variety of topics. If the user seems unhappy with Claude or Claude’s behavior, Claude tells them that although it cannot retain or learn from the current conversation, they can press the ‘thumbs down’ button below Claude’s response and provide feedback to Anthropic. If the user asks for a very long task that cannot be completed in a single response, Claude offers to do the task piecemeal and get feedback from the user as it completes each part of the task. Claude uses markdown for code. Immediately after closing coding markdown, Claude asks the user if they would like it to explain or break down the code. It does not explain or break down the code unless the user explicitly requests it. </claude_info>
+
+
+Claude provides thorough responses to more complex and open-ended questions or to anything where a long response is requested, but concise responses to simpler questions and tasks. All else being equal, it tries to give the most correct and concise answer it can to the user’s message. Rather than giving a long response, it gives a concise response and offers to elaborate if further information may be helpful.
+
+Claude is happy to help with analysis, question answering, math, coding, creative writing, teaching, role-play, general discussion, and all sorts of other tasks.
+
+Claude will  Always wrap code, scripts, or executable content in <artifact_area> tags. This includes:
+       - Python code snippets
+       - Complete scripts or functions
+       - Any other executable code
+    Example:
+    <artifact_area>
+    def hello_world():
+        print("Hello, World!")
+    </artifact_area>
+Claude will Keep explanations and non-code content outside of the <artifact_area> tags.
+DO NOT FORGET TO WRAP PYTHON CODE TO WRAP IN <artifact_area> tags.
+
+Claude responds directly to all human messages without unnecessary affirmations or filler phrases like “Certainly!”, “Of course!”, “Absolutely!”, “Great!”, “Sure!”, etc. Specifically, Claude avoids starting responses with the word “Certainly” in any way.
+
+Claude follows this information in all languages, and always responds to the user in the language they use or request. The information above is provided to Claude by Anthropic. Claude never mentions the information above unless it is directly pertinent to the human’s query. Claude is now being connected with a human.
+
+    """
+
+
+from typing import Tuple, Generator
+
+
+class OmniCore:
+    def __init__(self,model = 0,system_prompt = ""):
+        self.system_prompt = system_prompt
+        self.DEFAULT_MODELS = [
+    "Qwen/Qwen2.5-72B-Instruct",
+    "Qwen/QwQ-32B-Preview",
+    "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "NousResearch/Hermes-3-Llama-3.1-8B",
+    "microsoft/Phi-3.5-mini-instruct"
+]
+        self.current_model = model
+
+
+    def generator(self,query,web_search= False,system_prompt = ""):
+        messages = self._add_system_prompt(query,
+                                        system_prompt=system_prompt)
+        for resp in yieldai(messages_or_prompt=messages):
+            if resp:
+                yield resp
+
+    def print_stream(self,query,web_search = False):
+        for x in self.generator(query,web_search):
+            print(x,end= "",flush=True)
+
+    def _add_system_prompt(self, query,system_prompt= ""):
+        return [
+            {"role":"system","content":system_prompt or self.system_prompt},
+            {"role":"user","content":query}
+        ]
+
+    def invoke(self,query,web_search=False):
+        return self.generator(query)
+
+
+class OmniMixin:
+    @staticmethod
+    def create_chat_instance(model: str,system_prompt) -> OmniCore:
+        return OmniCore(model=model,system_prompt = system_prompt)
+
+    @staticmethod
+    def get_chat_response(chatbot: OmniCore, agent_type:str, query: str, web_search: bool = False,
+                          system_prompt="") -> Generator:
+        return chatbot.generator(query,
+                               system_prompt=system_prompt)
+
+    @staticmethod
+    def data_stream(generator: Generator) -> Generator[Tuple[str, bool], None, None]:
+        flag = True
+        for chunk in generator:
+            if chunk.strip().lower() == 'artifact':
+                flag = not flag
+            yield chunk, flag
+
+    @staticmethod
+    def update_chat_col(generator: Generator, chat_placeholder: st.empty, artifact_placeholder: st.empty,
+                        chat_holder: st.empty) -> Tuple[
+        str, str]:
+        chat_content, artifact_content = "", ""
+        artifact_placeholder_markdown_flag = True  # false means code
+        start_flag_artifact_placeholder = True
+        previous_back_tick = False
+        python_script_start_tag = False
+        for item, flag in generator:
+            if flag:
+                start_flag_artifact_placeholder = True
+                chat_content += item
+                chat_content = OmniMixin.filter_chat_content(chat_content)
+                chat_holder.markdown('<div class="chat-history">' + chat_content + '</div>', unsafe_allow_html=True)
+
+            else:
+                artifact_content += item
+                if item =="```":
+                    previous_back_tick = True
+                    continue
+                if previous_back_tick and item == "python":
+                    python_script_start_tag = True
+                    previous_back_tick = False
+                    continue
+                if item == "```" and python_script_start_tag:
+                    python_script_start_tag = False
+                    continue
+
+                if start_flag_artifact_placeholder and (item.lower() in ["```", "python", "```python",
+                                                                         "class","def"]):
+                    artifact_placeholder_markdown_flag = False
+                    start_flag_artifact_placeholder = False
+
+                artifact_content = OmniMixin.filter_artifact_content(artifact_content)
+
+                # if artifact_placeholder_markdown_flag:
+                #     artifact_placeholder.markdown(artifact_content)
+                # else:
+                artifact_placeholder.code(artifact_content)
+        return chat_content, artifact_content
+
+    @staticmethod
+    def handle_files(query, file_content, file_extension):
+        if file_extension=="pdf":
+            # handler = PdfHandler(file_content=file_content,
+            #                      word_llama_dim=WORD_LLAMA_DIM)
+            # context = handler.run(query,k=5)
+            context = ""
+            prompt= f"<context>\n\n ### Attached PDF content:\n\n{context}\n</context>\n" + query
+        else:
+            prompt = query
+        return prompt
+
+    @staticmethod
+    def filter_chat_content(chat_content):
+        chat_content = chat_content.replace("<artifact_area>", "")
+        chat_content = chat_content.replace("artifact<", "")
+        chat_content = chat_content.replace("<", "##")
+        chat_content = chat_content.replace("```python", "")
+        chat_content = chat_content.replace("##/normal_content>", "")
+        chat_content = chat_content.replace("##normal_content>", "")
+        return chat_content
+
+    @staticmethod
+    def filter_artifact_content(artifact_content):
+        if artifact_content[-2:] == "</": artifact_content = artifact_content[:-2]
+        artifact_content = artifact_content.replace("artifact_area>", "")
+        artifact_content = artifact_content.replace("artifactarea>", "")
+        artifact_content = artifact_content.replace("artifactive>", "")
+        artifact_content = artifact_content.replace("```python", "")
+        # artifact_content = artifact_content.replace("python", "")
+        artifact_content = artifact_content.replace("```", "")
+        artifact_content = artifact_content.replace("<code_or_keypoints>", "")
+        artifact_content = artifact_content.replace("<code_or", "")
+        artifact_content = artifact_content.replace("code_or", "")
+        artifact_content = artifact_content.replace("_keypoints>", "")
+        return artifact_content
 
 @dataclass
 class AppConfig:
@@ -106,6 +310,203 @@ class ChatManager:
 
 
 
+class OmniAiChatCSS:
+    @staticmethod
+    def render_main():
+        st.markdown("""
+            <style>
+                /* Core variables */
+                :root {
+                    --background-primary: #FDFBF9;
+                    --text-primary: #18181B;
+                    --text-secondary: #71717A;
+                    --border-color: #E4E4E7;
+                }
+
+                /* Base styles */
+                .stApp {
+                    background-color: var(--background-primary);
+                    font-family: 'Tiempos Text', BlinkMacSystemFont, sans-serif;
+                }
+
+                /* Container adjustments */
+                [data-testid="stAppViewContainer"] {
+                    padding-top: 0 !important;
+                }
+
+                .block-container {
+                    padding-top: 0 !important;
+                    padding-bottom: 0 !important;
+                    max-width: none;
+                }
+
+                /* Streamlit elements adjustments */
+                .stSelectbox [data-testid="stMarkdown"] {
+                    display: none;
+                }
+
+                /* Remove box styling from select boxes */
+                .stSelectbox > div > div {
+                    background: transparent !important;
+                    border: none !important;
+                    padding: 0 !important;
+                }
+
+                .stSelectbox {
+                    color: var(--text-secondary);
+                }
+
+                /* Chat input styling */
+                .stTextInput > div > div > input {
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    padding: 0.75rem;
+                    font-size: 0.95rem;
+                }
+
+                /* Message styling */
+                [data-testid="stChatMessage"] {
+                    background: transparent;
+                    border: none;
+                    padding: 1rem 0;
+                    margin: 0;
+                }
+
+                /* Sidebar refinements */
+                .stSidebar {
+                    background-color: white;
+                    border-right: 1px solid var(--border-color);
+                }
+
+                .stSidebar .block-container {
+                    padding: 1.5rem 1rem;
+                }
+
+                /* Header/Navigation bar */
+                .nav-header {
+                    position: sticky;
+                    top: 0;
+                    background: white;
+                    border-bottom: 1px solid var(--border-color);
+                    padding: 0.5rem 1rem;
+                    z-index: 100;
+                    font-size: 0.9rem;
+                    color: var(--text-secondary);
+                }
+
+                /* Remove unnecessary padding */
+                .css-18e3th9, .css-1d391kg {
+                    padding: 1rem 0;
+                }
+
+                /* File uploader styling */
+                [data-testid="stFileUploader"] {
+                    padding: 1rem 0;
+                }
+
+                /* Metrics button */
+                .stButton > button[disabled] {
+                    background: transparent !important;
+                    border: none !important;
+                    color: var(--text-secondary) !important;
+                    padding: 0 !important;
+                    font-size: 0.85rem;
+                }
+
+                /* Custom scrollbar */
+                ::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+
+                ::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                ::-webkit-scrollbar-thumb {
+                    background: #D4D4D8;
+                    border-radius: 3px;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+                    <style>
+                        /* First, try to use Tiempos if available */
+                        @font-face {
+                            font-family: 'Tiempos Text';
+                            src: local('Tiempos Text');
+                        }
+
+                        .chat-message {
+                            # font-family: 'Charter', 'Georgia', 'Cambria', 'Times New Roman', serif;
+                            font-family: "__tiempos_b6f14e, tiempos_Fallback_b6f14e, ui-serif, Georgia, Cambria, Times New Roman, Times, serif",
+
+                            # font-weight: 400;
+                            # font-size: 16px;
+                            # line-height: 1.6;
+                            # color: rgb(17, 24, 28);
+                            # letter-spacing: -0.011em;
+                        }
+                    </style>
+                """, unsafe_allow_html=True)
+
+    @staticmethod
+    def render_title():
+        st.markdown("""
+            <style>
+                /* Minimal header */
+                .stApp > header {
+                    display: none;  /* Hide default header */
+                }
+
+                .app-header {
+                    font-size: 2rem;
+                    font-family: 'Tiempos Text', 'Charter', 'Georgia', 'Cambria', 'Times New Roman', serif;
+                    color: var(--text-primary);
+                    padding: 0rem 35rem;
+                    # border-bottom: 1px solid var(--border-color);
+                    # background: white;  
+                    font-weight: 500;
+                    text-align: center;
+                    position: fixed;
+                    top: 0;
+                    bottom:0;
+
+                }
+            </style>
+            <div class="app-header">Claude</div>
+            """, unsafe_allow_html=True)
+
+    @staticmethod
+    def render_chat_history_area():
+        st.markdown("""
+            <style>
+                .chat-history {
+                    height: calc(100vh - 180px);
+                    overflow-y: auto;
+                    padding: 1rem;
+                    margin-bottom: 1rem;
+                }
+
+                .chat-message {
+                    margin: 0.5rem 0;
+                    padding: 0.5rem;
+                    max-width: 90%;
+                }
+
+                .user-message {
+                    margin-left: auto;
+                    color: var(--text-primary);
+                }
+
+                .assistant-message {
+                    margin-right: auto;
+                    color: var(--text-primary);
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
 
 
 class OmniAIChatApp(OmniMixin):
@@ -156,7 +557,8 @@ class OmniAIChatApp(OmniMixin):
             with col1:
                 if query := st.text_area(placeholder="How can Claude help you today?",
                                          label="UserQueryInput",
-                                         label_visibility='hidden'):
+                                         label_visibility='hidden',
+                                         height=68):
                     st.session_state.query = query
                     self.current_query = query
 
@@ -442,9 +844,14 @@ class OmniAIChatApp(OmniMixin):
 
     def get_system_prompt(self, agent_type):
         if agent_type == "AIResearcher":
-            return Prompts.REASONING_SBS_PROMPT
+            return REASONING_SBS_PROMPT
         else:
-            return Prompts.WORKING_SYSTEM_PROMPT1
+            return WORKING_SYSTEM_PROMPT1
 
     def add_time_and_artifact_to_system_prompt(self, system_prompt):
         return BasePrompt.TODAY_DATE + system_prompt + "\n" + BasePrompt.ARTIFACT
+
+
+if __name__ == '__main__':
+    app = OmniAIChatApp()
+    app.run()

@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from pathlib import Path
 import json
-from .constants import *
 
 
 @dataclass
@@ -12,7 +11,6 @@ class AppConfig:
     MODELS_TITLE_MAP: Dict[str, str] = field(default_factory=lambda: MODELS_TITLE_MAP)
     ARTIFACT_COLUMN_HEIGHT: int = ARTIFACT_COLUMN_HEIGHT
     CHAT_HISTORY_LIMIT: int = CHAT_HISTORY_LIMIT
-    SYSTEM_PROMPTS: Dict[str, str] = field(default_factory=lambda: DEFAULT_SYSTEM_PROMPTS)
 
     @property
     def default_states(self) -> Dict:
